@@ -244,3 +244,7 @@ dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix = 
 dotnet_naming_style.begins_with_i.word_separator = 
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
+[*]
+vsspell_section_id = 83cba13f2b2b4a7f963ee82db4b690f2
+vsspell_ignored_words_83cba13f2b2b4a7f963ee82db4b690f2 = Laravel|Changelog
+
