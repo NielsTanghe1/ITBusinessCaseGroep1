@@ -1,0 +1,55 @@
+﻿@model ITBusinessCase.Models.OrderViewModel
+@{
+    ViewData["Title"] = "Place Order";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Place New Order</h4>
+        </div>
+        <div class="card-body">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-action="SubmitOrder" method="post">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" required />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Product Type</label>
+                            <select asp-for="ProductType" class="form-select">
+                                <option value="Hardware">Hardware Bundle</option>
+                                <option value="Software">Software Licentie</option>
+                                <option value="Consultancy">Consultancy Uren</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity</label>
+                            <input asp-for="Quantity" type="number" class="form-control" min="1" value="1" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm">Send to RabbitMQ</button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    You need to be logged in to place an order.
+                    <a asp-area="Identity" asp-page="/Account/Login">Login here</a>.
+                </div>
+            }
+        </div>
+    </div>
+</div>

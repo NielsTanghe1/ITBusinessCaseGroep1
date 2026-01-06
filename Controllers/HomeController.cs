@@ -22,5 +22,19 @@ namespace ITBusinessCase.Controllers {
 		public IActionResult Error() {
 			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 		}
+
+		public IActionResult ManageCustomers() {
+			return View();
+		}
+
+		public IActionResult PlaceOrder() {
+			return View();
+		}
+
+		[HttpPost]
+		public IActionResult SubmitOrder(OrderViewModel order) {
+			TempData["Message"] = "Order sent to RabbitMQ!";
+			return RedirectToAction("Index");
+		}
 	}
 }
