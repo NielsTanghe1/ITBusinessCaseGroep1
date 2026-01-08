@@ -28,6 +28,7 @@ builder.Services.AddMassTransit(x => {
 			});
 		}
 
+		// Makes queue in RabbitMQ
 		cfg.ReceiveEndpoint("order-queue", e =>
 		{
 			e.ConfigureConsumer<OrderCreatedConsumer>(context);
