@@ -1,55 +1,122 @@
-﻿@model ITBusinessCase.Models.OrderViewModel
-@{
-    ViewData["Title"] = "Place Order";
+﻿@{
+    ViewData["Title"] = "Place New Order";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-dark text-white">
-            <h4 class="mb-0">Place New Order</h4>
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Place New Order</h3>
         </div>
         <div class="card-body">
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <form asp-action="SubmitOrder" method="post">
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">First Name</label>
-                            <input asp-for="FirstName" class="form-control" required />
-                        </div>
-                        <div class="col">
-                            <label class="form-label">Last Name</label>
-                            <input asp-for="LastName" class="form-control" required />
-                        </div>
+            <form id="orderForm">
+                <div class="row g-3">
+                    <h5 class="border-bottom pb-2">Product Details</h5>
+                    <div class="col-md-6">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" class="form-control" name="productName" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="productType">
+                            <option value="Electronics">Electronics</option>
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantity" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Price</label>
+                        <input type="number" step="0.01" class="form-control" name="price" required>
+                    </div>
+
+                    <h5 class="border-bottom pb-2 mt-4">Customer Details</h5>
+                    <div class="col-md-4">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="firstName" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="lastName" required>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Email</label>
-                        <input asp-for="Email" type="email" class="form-control" required />
+                        <input type="email" class="form-control" name="email" required>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            <label class="form-label">Product Type</label>
-                            <select asp-for="ProductType" class="form-select">
-                                <option value="Hardware">Hardware Bundle</option>
-                                <option value="Software">Software Licentie</option>
-                                <option value="Consultancy">Consultancy Uren</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Quantity</label>
-                            <input asp-for="Quantity" type="number" class="form-control" min="1" value="1" />
-                        </div>
+
+                    <h5 class="border-bottom pb-2 mt-4">Shipping Address</h5>
+                    <div class="col-md-6">
+                        <label class="form-label">Street</label>
+                        <input type="text" class="form-control" name="street" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 shadow-sm">Send to RabbitMQ</button>
-                </form>
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    You need to be logged in to place an order.
-                    <a asp-area="Identity" asp-page="/Account/Login">Login here</a>.
+                    <div class="col-md-2">
+                        <label class="form-label">Postbus</label>
+                        <input type="text" class="form-control" name="postbus">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" name="city" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Postcode</label>
+                        <input type="number" class="form-control" name="postcode" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Country</label>
+                        <input type="text" class="form-control" name="country" required>
+                    </div>
+
+                    <h5 class="border-bottom pb-2 mt-4">Payment Information</h5>
+                    <div class="col-md-8">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-control" name="cardnumber" placeholder="1234..." required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">CVV</label>
+                        <input type="number" class="form-control" name="cvv" required>
+                    </div>
                 </div>
-            }
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg w-100">Submit Order</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('orderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Ensure numbers are sent as numbers, not strings
+            data.price = parseFloat(data.price);
+            data.quantity = parseInt(data.quantity);
+            data.postcode = parseInt(data.postcode);
+            data.cvv = parseInt(data.cvv);
+
+            try {
+                const response = await fetch('/api/Order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Order sent to RabbitMQ successfully!');
+                    e.target.reset();
+                } else {
+                    alert('Error sending order: ' + response.statusText);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        });
+    </script>
+}
