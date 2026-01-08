@@ -5,8 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMassTransit(x => {
 
-	x.AddConsumer<OrderCreatedConsumer>();
-	// Kies voor RabbitMQ als transport
+	x.AddConsumer<SalesforceConsumer>();
+	x.AddConsumer<SapIdocConsumer>();
+	x.AddConsumer<OrderCreatedConsumer>(); // Kies voor RabbitMQ als transport
 	x.UsingRabbitMq((context, cfg) =>
 	{
 		var rabbitMqHost = builder.Configuration.GetConnectionString("RabbitMQ");
@@ -29,6 +30,8 @@ builder.Services.AddMassTransit(x => {
 
 		cfg.ReceiveEndpoint("order-queue", e =>
 		{
+			e.ConfigureConsumer<SalesforceConsumer>(context);
+			e.ConfigureConsumer<SapIdocConsumer>(context);
 			e.ConfigureConsumer<OrderCreatedConsumer>(context);
 			e.ConcurrentMessageLimit = 4;
 		});

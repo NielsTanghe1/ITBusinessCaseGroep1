@@ -1,9 +1,11 @@
 ﻿using MassTransit;
-using ITBusinessCase.Models;
 using ITBusinessCase.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
+namespace ITBusinessCase.Controllers;
+
 [ApiController]
+
 [Route("api/[controller]")]
 public class OrderController : ControllerBase {
 	private readonly IPublishEndpoint _publishEndpoint;
@@ -14,10 +16,23 @@ public class OrderController : ControllerBase {
 
 	[HttpPost]
 	public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request) {
+		// Map the request to the full OrderCreated contract
 		var message = new OrderCreated(
 			 Guid.NewGuid(),
-			 request.CustomerName,
-			 request.TotalAmount
+			 request.ProductName,
+			 request.ProductType,
+			 request.Price,
+			 request.Quantity,
+			 request.FirstName,
+			 request.LastName,
+			 request.Email,
+			 request.Postcode,
+			 request.City,
+			 request.Street,
+			 request.Postbus,
+			 request.Country,
+			 request.Cardnumber,
+			 request.CVV
 		);
 
 		await _publishEndpoint.Publish(message);
@@ -26,4 +41,10 @@ public class OrderController : ControllerBase {
 	}
 }
 
-public record CreateOrderRequest(string CustomerName, decimal TotalAmount);
+// Request DTO matching the architecture tables
+public record CreateOrderRequest(
+	 string ProductName, string ProductType, decimal Price, int Quantity,
+	 string FirstName, string LastName, string Email,
+	 int Postcode, string City, string Street, string Postbus, string Country,
+	 string Cardnumber, int CVV
+);

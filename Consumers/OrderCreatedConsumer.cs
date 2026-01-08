@@ -5,9 +5,9 @@ namespace ITBusinessCase.Consumers;
 
 public class OrderCreatedConsumer : IConsumer<OrderCreated> {
 	public Task Consume(ConsumeContext<OrderCreated> context) {
-		Console.WriteLine($"Received OrderCreated: OrderId={context.Message.OrderId}, Customer={context.Message.CustomerName}");
+		// Use the new FirstName and LastName properties from the updated contract
+		Console.WriteLine($"Received OrderCreated: OrderId={context.Message.OrderId}, Customer={context.Message.FirstName} {context.Message.LastName}");
 
-		// Your business logic here
 		return Task.CompletedTask;
 	}
 }
