@@ -5,10 +5,11 @@ name: .NET
 
 on:
   push:
-    branches: [ "features/dotnet-web-api" ]
+    branches:
+      - 'main'
   pull_request:
-    branches: [ "features/dotnet-web-api" ]
-
+    branches:
+      - 'main'
 jobs:
   build:
 
