@@ -30,9 +30,17 @@ builder.Services.AddMassTransit(x => {
 
 		cfg.ReceiveEndpoint("order-queue", e =>
 		{
-			e.ConfigureConsumer<SalesforceConsumer>(context);
-			e.ConfigureConsumer<SapIdocConsumer>(context);
 			e.ConfigureConsumer<OrderCreatedConsumer>(context);
+			e.ConcurrentMessageLimit = 4;
+		});
+
+		cfg.ReceiveEndpoint("salesforce-queue", e => {
+			e.ConfigureConsumer<SalesforceConsumer>(context);
+			e.ConcurrentMessageLimit = 4;
+		});
+
+		cfg.ReceiveEndpoint("sapidoc-queue", e => {
+			e.ConfigureConsumer<SapIdocConsumer>(context);
 			e.ConcurrentMessageLimit = 4;
 		});
 	});
