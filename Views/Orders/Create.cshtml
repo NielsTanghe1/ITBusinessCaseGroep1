@@ -1,0 +1,322 @@
+﻿@model ITBusinessCase.Models.PlaceOrderViewModel
+@using ITBusinessCase.Data
+
+@{
+    ViewData["Title"] = "Coffee Shop";
+    var products = CoffeeCatalog.Items;
+}
+
+<style>
+    .shop-hero {
+        border-radius: 1.5rem;
+        padding: 1.2rem;
+        background: linear-gradient(135deg, rgba(13,110,253,.10), rgba(25,135,84,.10));
+        border: 1px solid rgba(0,0,0,.06);
+    }
+
+    /* PRODUCT CARD */
+    .product-card {
+        border-radius: 1.1rem;
+        border: 1px solid rgba(0,0,0,.06);
+        transition: transform .15s ease, box-shadow .15s ease;
+        background: #fff;
+        overflow: hidden;
+    }
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .6rem 1.2rem rgba(0,0,0,.08);
+    }
+    .product-card.selected {
+        border-color: rgba(25,135,84,.5);
+        background: rgba(25,135,84,.04);
+    }
+
+    .product-image {
+        height: 140px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .price-pill {
+        border-radius: 999px;
+        padding: .3rem .6rem;
+        font-weight: 700;
+        background: rgba(0,0,0,.05);
+        font-size: .9rem;
+    }
+
+    .btn-bag {
+        border-radius: 999px;
+        font-weight: 700;
+        background: #fd7e14;
+        border: none;
+        color: #111;
+    }
+    .btn-bag:hover { filter: brightness(.95); }
+
+    /* CART DROPDOWN */
+    .cart-dropdown {
+        min-width: 340px;
+        border-radius: 1rem;
+        border: 1px solid rgba(0,0,0,.1);
+        box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.1);
+    }
+    .cart-item {
+        padding: .6rem .9rem;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+    .cart-item:last-child { border-bottom: none; }
+</style>
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="shop-hero mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-0">☕ Coffee Shop</h2>
+            <div class="text-muted">Kies je koffie en bekijk je tas bovenaan</div>
+        </div>
+
+        <!-- CART DROPDOWN -->
+        <div class="dropdown">
+            <button id="cartBtn"
+                    class="btn btn-outline-primary rounded-pill fw-bold position-relative px-3 dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside">
+                🛒 Tas
+                <span id="cartCountBadge"
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+            </button>
+
+            <div class="dropdown-menu dropdown-menu-end p-0 cart-dropdown">
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                        <strong>Jouw tas</strong>
+                        <strong>€<span id="cartTotalTop">0.00</span></strong>
+                    </div>
+                </div>
+
+                <div id="cartEmpty" class="p-3 text-muted">
+                    Je tas is nog leeg.
+                </div>
+
+                <div id="cartList" class="d-none"></div>
+
+                <div class="p-3 border-top d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger rounded-pill w-50" id="clearCartBtn">
+                        Leegmaken
+                    </button>
+                    <a href="#checkout" class="btn btn-success rounded-pill w-50">
+                        Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="orderForm" asp-action="Create" method="post" novalidate>
+        @Html.AntiForgeryToken()
+
+        <!-- PRODUCT GRID (3 naast elkaar) -->
+        <div class="row g-4">
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                var p = products.First(x => x.Id == Model.Items[i].ProductId);
+
+                <div class="col-6 col-md-4 col-lg-4">
+                    <div class="product-card h-100 js-product-card" data-product-id="@p.Id">
+                        <img src="@p.ImageUrl" alt="@p.Name" class="product-image" />
+
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@p.Name</strong>
+                                    <div class="text-muted small">@p.Id</div>
+                                </div>
+                                <div class="price-pill">€@p.Price.ToString("0.00")</div>
+                            </div>
+
+                            <input type="hidden" asp-for="Items[@i].ProductId" />
+
+                            <div class="mt-2">
+                                <label class="form-label small">Aantal</label>
+                                <select class="form-select js-qty"
+                                        asp-for="Items[@i].Quantity"
+                                        data-name="@p.Name"
+                                        data-price="@p.Price"
+                                        data-product-id="@p.Id">
+                                    <option value="0">0</option>
+                                    @for (int q = 1; q <= 10; q++)
+                                    {
+                                        <option value="@q">@q</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <button type="button" class="btn btn-bag w-100 mt-3 js-add">
+                                👜 In tas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- CHECKOUT -->
+        <div id="checkout" class="card p-4">
+            <h5 class="fw-bold mb-3">Gegevens</h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input class="form-control" asp-for="FirstName" placeholder="Voornaam" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control" asp-for="LastName" placeholder="Achternaam" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control" asp-for="Email" placeholder="Email" />
+                </div>
+
+                <div class="col-md-6">
+                    <input class="form-control" asp-for="Street" placeholder="Straat + nr" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control" asp-for="Postbus" placeholder="Postbus" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control" asp-for="City" placeholder="Stad" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control" asp-for="Postcode" placeholder="Postcode" />
+                </div>
+                <div class="col-md-9">
+                    <input class="form-control" asp-for="Country" placeholder="Land" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100 mt-4">
+                ✅ Bestelling plaatsen
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function money(n) { return (n || 0).toFixed(2); }
+
+        function getItems() {
+            return Array.from(document.querySelectorAll(".js-qty"))
+                .map(s => {
+                    const q = parseInt(s.value || "0");
+                    const p = parseFloat(s.dataset.price || "0");
+                    return {
+                        id: s.dataset.productId,
+                        name: s.dataset.name,
+                        qty: q,
+                        total: q * p
+                    };
+                })
+                .filter(x => x.qty > 0);
+        }
+
+        function renderCart() {
+            const items = getItems();
+            const badge = document.getElementById("cartCountBadge");
+            const totalEl = document.getElementById("cartTotalTop");
+            const list = document.getElementById("cartList");
+            const empty = document.getElementById("cartEmpty");
+
+            badge.textContent = items.reduce((a, b) => a + b.qty, 0);
+            totalEl.textContent = money(items.reduce((a, b) => a + b.total, 0));
+
+            document.querySelectorAll(".js-product-card").forEach(c => {
+                const pid = c.dataset.productId;
+                c.classList.toggle("selected", items.some(i => i.id === pid));
+            });
+
+            if (items.length === 0) {
+                empty.classList.remove("d-none");
+                list.classList.add("d-none");
+                list.innerHTML = "";
+                return;
+            }
+
+            empty.classList.add("d-none");
+            list.classList.remove("d-none");
+
+            list.innerHTML = items.map(i => `
+                <div class="cart-item">
+                    <strong>${i.name}</strong><br />
+                    <small>${i.qty} × €${money(i.total / i.qty)}</small>
+                    <div class="fw-bold">€${money(i.total)}</div>
+                </div>
+            `).join("");
+        }
+
+        document.querySelectorAll(".js-add").forEach(b => {
+            b.addEventListener("click", () => {
+                const sel = b.closest(".product-card").querySelector(".js-qty");
+                if (sel.value === "0") sel.value = "1";
+                renderCart();
+                bootstrap.Dropdown.getOrCreateInstance(cartBtn).show();
+            });
+        });
+
+        document.addEventListener("change", e => {
+            if (e.target.classList.contains("js-qty")) renderCart();
+        });
+
+        document.getElementById("clearCartBtn").addEventListener("click", () => {
+            document.querySelectorAll(".js-qty").forEach(s => s.value = "0");
+            renderCart();
+        });
+
+        renderCart();
+    </script>
+    <script>
+        document.getElementById("orderForm").addEventListener("submit", function (e) {
+            const missing = [];
+
+            // Minstens 1 product gekozen?
+            const anyProduct = Array.from(document.querySelectorAll(".js-qty"))
+                .some(q => parseInt(q.value || "0") > 0);
+
+            if (!anyProduct) {
+                missing.push("Kies minstens één product");
+            }
+
+            // Verplichte velden
+            const requiredFields = [
+                ["FirstName", "Voornaam"],
+                ["LastName", "Achternaam"],
+                ["Email", "Email"],
+                ["Street", "Straat"],
+                ["Postbus", "Postbus"],
+                ["City", "Stad"],
+                ["Postcode", "Postcode"],
+                ["Country", "Land"]
+            ];
+
+            for (const [id, label] of requiredFields) {
+                const el = document.getElementById(id);
+                if (!el || !el.value.trim()) {
+                    missing.push(label);
+                }
+            }
+
+            // Popup tonen
+            if (missing.length > 0) {
+                e.preventDefault();
+                alert(
+                    "Je bent het volgende vergeten in te vullen:\n\n" +
+                    "• " + missing.join("\n• ")
+                );
+            }
+        });
+    </script>
+
+}
