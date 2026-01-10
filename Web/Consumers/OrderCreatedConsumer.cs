@@ -1,7 +1,7 @@
 ﻿using MassTransit;
-using ITBusinessCase.Contracts;
+using Web.Contracts;
 
-namespace ITBusinessCase.Consumers;
+namespace Web.Consumers;
 
 public class OrderCreatedConsumer : IConsumer<OrderCreated> {
 	public Task Consume(ConsumeContext<OrderCreated> context) {

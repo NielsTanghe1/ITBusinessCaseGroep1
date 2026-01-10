@@ -85,4 +85,4 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ---
 
-[1]: ./Resources/Images/image-1.png "Route visual"
+[1]: Web/Resources/Images/route_visual_1.jpg "Route visual"

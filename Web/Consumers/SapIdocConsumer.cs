@@ -1,7 +1,7 @@
 ﻿using MassTransit;
-using ITBusinessCase.Contracts;
+using Web.Contracts;
 
-namespace ITBusinessCase.Consumers;
+namespace Web.Consumers;
 
 public class SapIdocConsumer : IConsumer<OrderCreated> {
 	public async Task Consume(ConsumeContext<OrderCreated> context) {

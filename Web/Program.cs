@@ -1,4 +1,4 @@
-using ITBusinessCase.Consumers;
+using Web.Consumers;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,4 +1,4 @@
-﻿namespace ITBusinessCase.Contracts;
+﻿namespace Web.Contracts;
 
 // Main message contract including all table data
 public record OrderCreated(
