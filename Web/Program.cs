@@ -12,6 +12,15 @@ builder.Services.AddMassTransit(x => {
 	{
 		var rabbitMqHost = builder.Configuration.GetConnectionString("RabbitMQ");
 
+		var host = builder.Configuration["RabbitMQConfig:Host"] ?? "localhost";
+		var user = builder.Configuration["RabbitMQConfig:Username"] ?? "guest";
+		var pass = builder.Configuration["RabbitMQConfig:Password"] ?? "guest";
+
+		cfg.Host(host, h => {
+			h.Username(user);
+			h.Password(pass);
+		});
+
 		if (builder.Environment.IsDevelopment()) {
 			// Local dev: connect to localhost
 			cfg.Host("localhost", h =>
