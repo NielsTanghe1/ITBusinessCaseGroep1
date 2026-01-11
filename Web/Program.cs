@@ -1,45 +1,34 @@
-using Web.Consumers;
 using MassTransit;
+using Web.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
+bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
 
 builder.Services.AddMassTransit(x => {
-
 	x.AddConsumer<SalesforceConsumer>();
 	x.AddConsumer<SapIdocConsumer>();
 	x.AddConsumer<OrderCreatedConsumer>(); // Kies voor RabbitMQ als transport
-	x.UsingRabbitMq((context, cfg) =>
-	{
-		var rabbitMqHost = builder.Configuration.GetConnectionString("RabbitMQ");
-
+	x.UsingRabbitMq((context, cfg) => {
 		var host = builder.Configuration["RabbitMQConfig:Host"] ?? "localhost";
 		var user = builder.Configuration["RabbitMQConfig:Username"] ?? "guest";
 		var pass = builder.Configuration["RabbitMQConfig:Password"] ?? "guest";
 
-		cfg.Host(host, h => {
-			h.Username(user);
-			h.Password(pass);
-		});
-
-		if (builder.Environment.IsDevelopment()) {
+		if (isDebugging && isDebuggingResult) {
 			// Local dev: connect to localhost
-			cfg.Host("localhost", h =>
-			{
+			cfg.Host("localhost", h => {
 				h.Username("guest");
 				h.Password("guest");
 			});
 		} else {
 			// Docker/prod: use container name
-			cfg.Host(rabbitMqHost, "/", h =>
-			{
-				h.Username("guest");
-				h.Password("guest");
+			cfg.Host(host, "/", h => {
+				h.Username(user);
+				h.Password(pass);
 			});
 		}
 
-		// Makes queue in RabbitMQ
-		cfg.ReceiveEndpoint("order-queue", e =>
-		{
+		// Prep queues in RabbitMQ:
+		cfg.ReceiveEndpoint("order-queue", e => {
 			e.ConfigureConsumer<OrderCreatedConsumer>(context);
 			e.ConcurrentMessageLimit = 4;
 		});
@@ -54,7 +43,6 @@ builder.Services.AddMassTransit(x => {
 			e.ConcurrentMessageLimit = 4;
 		});
 	});
-
 });
 
 // Add services to the container.
@@ -77,9 +65,8 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
-	 name: "default",
-	 pattern: "{controller=Home}/{action=Index}/{id?}")
-	 .WithStaticAssets();
-
+	name: "default",
+	pattern: "{controller=Home}/{action=Index}/{id?}")
+	.WithStaticAssets();
 
 app.Run();
