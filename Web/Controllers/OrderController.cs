@@ -1,8 +1,8 @@
 ﻿using MassTransit;
-using ITBusinessCase.Contracts;
+using Web.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ITBusinessCase.Controllers;
+namespace Web.Controllers;
 
 [ApiController]
 

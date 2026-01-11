@@ -1,4 +1,4 @@
-﻿namespace ITBusinessCase.Models {
+﻿namespace Web.Models {
 	public class OrderViewModel {
 		public string LastName { get; set; } = string.Empty;
 		public string FirstName { get; set; } = string.Empty;
