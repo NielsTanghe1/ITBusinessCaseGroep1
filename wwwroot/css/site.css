@@ -29,3 +29,35 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+/* ===== Admin UI helpers ===== */
+.admin-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.admin-card {
+    border: 1px solid rgba(0,0,0,.08);
+    transition: transform .08s ease, box-shadow .08s ease;
+}
+
+    .admin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+    }
+
+.admin-card-icon {
+    font-size: 1.75rem;
+    margin-bottom: .5rem;
+}
+
+.admin-inline-form input {
+    width: 140px;
+}
+
+.admin-json {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+}

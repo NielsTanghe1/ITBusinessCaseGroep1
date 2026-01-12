@@ -1,0 +1,45 @@
+﻿@{
+    ViewData["Title"] = "Admin dashboard";
+}
+
+<div class="admin-header mb-4">
+    <div>
+        <h2 class="mb-1">Admin dashboard</h2>
+        <div class="text-muted">Beheer gebruikers, rollen en bestellingen.</div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card admin-card h-100">
+            <div class="card-body">
+                <div class="admin-card-icon">👤</div>
+                <h5 class="card-title mb-1">Users</h5>
+                <p class="card-text text-muted">Bekijk users, rol toewijzing en verwijderen.</p>
+                <a class="btn btn-primary w-100" asp-action="Users">Users beheren</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card admin-card h-100">
+            <div class="card-body">
+                <div class="admin-card-icon">🛡️</div>
+                <h5 class="card-title mb-1">Rollen</h5>
+                <p class="card-text text-muted">Maak rollen aan en beheer bestaande rollen.</p>
+                <a class="btn btn-outline-primary w-100" asp-action="Roles">Rollen beheren</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card admin-card h-100">
+            <div class="card-body">
+                <div class="admin-card-icon">📦</div>
+                <h5 class="card-title mb-1">Bestellingen</h5>
+                <p class="card-text text-muted">Bekijk alle orders en open details.</p>
+                <a class="btn btn-success w-100" asp-action="Orders">Orders bekijken</a>
+            </div>
+        </div>
+    </div>
+</div>

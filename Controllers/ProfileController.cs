@@ -1,0 +1,112 @@
+﻿using ITBusinessCase.Data;
+using ITBusinessCase.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace ITBusinessCase.Controllers;
+
+[Authorize]
+public class ProfileController : Controller {
+	private readonly ApplicationDbContext _db;
+	private readonly UserManager<IdentityUser> _userManager;
+
+	public ProfileController(ApplicationDbContext db, UserManager<IdentityUser> userManager) {
+		_db = db;
+		_userManager = userManager;
+	}
+
+	// -------------------
+	// PROFIEL EDIT
+	// -------------------
+	[HttpGet]
+	public async Task<IActionResult> Edit() {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null)
+			return Challenge();
+
+		var profile = await _db.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+
+		if (profile == null) {
+			profile = new UserProfile {
+				UserId = user.Id,
+				Email = user.Email ?? user.UserName ?? ""
+			};
+		}
+
+		return View(profile);
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> Edit(UserProfile model) {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null)
+			return Challenge();
+
+		// Zorg dat niemand een andere userId post
+		model.UserId = user.Id;
+
+		if (!ModelState.IsValid)
+			return View(model);
+
+		var existing = await _db.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+
+		if (existing == null) {
+			_db.UserProfiles.Add(model);
+		} else {
+			existing.FirstName = model.FirstName;
+			existing.LastName = model.LastName;
+			existing.Email = model.Email;
+			existing.Street = model.Street;
+			existing.Postbus = model.Postbus;
+			existing.City = model.City;
+			existing.Postcode = model.Postcode;
+			existing.Country = model.Country;
+		}
+
+		// (optioneel) sync Identity email
+		if (!string.IsNullOrWhiteSpace(model.Email) && user.Email != model.Email) {
+			user.Email = model.Email;
+			user.UserName = model.Email;
+			await _userManager.UpdateAsync(user);
+		}
+
+		await _db.SaveChangesAsync();
+
+		TempData["ProfileSaved"] = "Profiel opgeslagen!";
+		return RedirectToAction(nameof(Edit));
+	}
+
+	// -------------------
+	// MIJN BESTELLINGEN
+	// -------------------
+	public async Task<IActionResult> MyOrders() {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null)
+			return Challenge();
+
+		var email = user.Email ?? user.UserName ?? "";
+
+		var orders = await _db.Orders
+			 .Where(o => o.CustomerEmail == email)
+			 .OrderByDescending(o => o.CreatedAtUtc)
+			 .ToListAsync();
+
+		return View(orders);
+	}
+
+	public async Task<IActionResult> MyOrderDetails(int id) {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null)
+			return Challenge();
+
+		var email = user.Email ?? user.UserName ?? "";
+
+		var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id && o.CustomerEmail == email);
+		if (order == null)
+			return NotFound();
+
+		return View(order);
+	}
+}

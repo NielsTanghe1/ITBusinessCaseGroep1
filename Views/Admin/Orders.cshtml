@@ -1,0 +1,62 @@
+﻿@model List<ITBusinessCase.Controllers.AdminOrderListItemVm>
+@{
+    ViewData["Title"] = "Bestellingen";
+}
+
+<div class="admin-header mb-3 d-flex align-items-center justify-content-between">
+    <div>
+        <h2 class="mb-1">Bestellingen</h2>
+        <div class="text-muted">Overzicht van alle orders.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Index">Dashboard</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>OrderId</th>
+                        <th>Klant</th>
+                        <th>Email</th>
+                        <th>Totaal</th>
+                        <th>Status</th>
+                        <th>Datum (UTC)</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var o in Model)
+                    {
+                        <tr>
+                            <td style="max-width:260px; word-break:break-word;">
+                                <div class="fw-semibold">@o.OrderId</div>
+                            </td>
+                            <td>@o.FullName</td>
+                            <td>@o.Email</td>
+                            <td>@(o.Total?.ToString("0.00") ?? "-")</td>
+                            <td>
+                                @{
+                                    var badge = o.Status == "Submitted" ? "bg-primary" : "bg-secondary";
+                                }
+                                <span class="badge @badge">@o.Status</span>
+                            </td>
+                            <td>@o.CreatedAtUtc</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-primary"
+                                   asp-controller="Admin"
+                                   asp-action="OrderDetails"
+                                   asp-route-id="@o.Id">
+                                    Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,43 @@
+﻿@model List<Microsoft.AspNetCore.Identity.IdentityRole>
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<div class="admin-header mb-3 d-flex align-items-center justify-content-between">
+    <div>
+        <h2 class="mb-1">Rollen</h2>
+        <div class="text-muted">Maak rollen aan en bekijk bestaande rollen.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Index">Dashboard</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3">Nieuwe rol</h5>
+                <form asp-action="CreateRole" method="post" class="d-flex gap-2">
+                    <input class="form-control" name="roleName" placeholder="Role naam (bv Admin)" />
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3">Bestaande rollen</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var r in Model)
+                    {
+                        var cls = r.Name == "Admin" ? "bg-danger" : "bg-secondary";
+                        <span class="badge @cls p-2">@r.Name</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,44 @@
+﻿@model ITBusinessCase.Controllers.CreateUserVm
+@{
+    ViewData["Title"] = "User aanmaken";
+}
+
+<div class="admin-header mb-3 d-flex align-items-center justify-content-between">
+    <div>
+        <h2 class="mb-1">User aanmaken</h2>
+        <div class="text-muted">Maak een nieuw account (optioneel met rol).</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-action="Users">Terug</a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" asp-for="Email" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input class="form-control" asp-for="Password" type="password" />
+                        <div class="form-text">Gebruik bv. minimaal 6 tekens.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role (optioneel)</label>
+                        <input class="form-control" asp-for="Role" placeholder="Admin / User ..." />
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit">Create</button>
+                </form>
+
+                <div asp-validation-summary="All" class="text-danger mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>

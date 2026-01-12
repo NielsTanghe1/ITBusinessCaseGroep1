@@ -1,0 +1,20 @@
+﻿@model ITBusinessCase.Models.LoginRegisterViewModel
+
+<h2>Login</h2>
+<form asp-action="Login" method="post">
+    <input asp-for="LoginEmail" placeholder="Email" />
+    <input asp-for="LoginPassword" type="password" placeholder="Password" />
+    <button type="submit">Login</button>
+</form>
+
+<hr />
+
+<h2>Account aanmaken</h2>
+<form asp-action="Register" method="post">
+    <input asp-for="RegisterEmail" placeholder="Email" />
+    <input asp-for="RegisterPassword" type="password" placeholder="Password" />
+    <input asp-for="ConfirmPassword" type="password" placeholder="Bevestig password" />
+    <button type="submit">Registreren</button>
+</form>
+
+<div asp-validation-summary="All"></div>
