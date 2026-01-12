@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-01-13
+
+### Added
+
+Introduced initial entity models defined by the ERD schema:
+- Added base classes (BaseEntity, BaseIdentityEntity) to centralize common properties such as creation and deletion timestamps.
+- Added main entities: Address, Customer, Order, OrderItem, PaymentDetail, and Product.
+- Added supporting enum-like types (AddressType, ProductType, StatusType) to enforce model consistency and type safety.
+
 ## [1.2.0] - 2026-01-12
 
 ### Added
@@ -73,6 +82,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.3.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.3.0
 [1.2.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.2.0
 [1.1.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.1.0
 [1.0.2]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.0.2
