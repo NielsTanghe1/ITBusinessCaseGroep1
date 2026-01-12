@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-12
+
+### Added
+
+Add new Models project with initial structure and configuration.
+- Add relevant files:
+  - Models.csproj and Models.sln.
+
+Add folders to Models:
+- Entities/DTO/
+- Extensions\Mappings/
+- Migrations/
+- Data/
+- Resources/
+
 ## [1.1.0] - 2026-01-09
 
 ### Changed
@@ -58,6 +73,7 @@ and this project (tries) to adhere to [Semantic Versioning](https://semver.org/s
 
 - Initial commit: creates repository.
 
+[1.2.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.2.0
 [1.1.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.1.0
 [1.0.2]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.0.2
 [1.0.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.0.1
