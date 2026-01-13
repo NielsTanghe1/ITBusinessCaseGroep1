@@ -12,6 +12,6 @@
 public enum StatusType {
 	Unknown = 0,
 	Pending = 1,
-	Shipped = 2
+	Confirmed = 2,
+	Canceled = 3,
 }
-

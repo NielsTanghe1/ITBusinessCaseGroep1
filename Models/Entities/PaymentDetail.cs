@@ -43,9 +43,9 @@ public class PaymentDetail : BaseEntity {
 	/// <summary>
 	/// Gets or sets the last four digits of the bank account.
 	/// </summary>
-	[StringLength(4)]
+	[Range(4, 4)]
 	[Display(Name = "LastFour")]
-	public required string LastFour {
+	public required int LastFour {
 		get; set;
 	}
 
@@ -70,5 +70,105 @@ public class PaymentDetail : BaseEntity {
 	public required string GatewayToken {
 		get; set;
 	}
-}
 
+	/// <summary>
+	/// Generates a fixed set of <see cref="PaymentDetail"/> entities for seeding purposes.
+	/// </summary>
+	/// <param name="customerIds">
+	/// An array of customer identifiers. Identifiers are pseudo-randomly mapped to one
+	/// generated <see cref="PaymentDetail"/> instance.
+	/// </param>
+	/// <returns>
+	/// An array of <see cref="PaymentDetail"/> objects containing predefined payment detail data
+	/// associated with the provided customer identifiers.
+	/// </returns>
+	public static PaymentDetail[] SeedingData(long[] customerIds) {
+		Random rnd = new();
+		return [
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 8530,
+				ExpiryDate = DateTime.UtcNow.AddYears(2),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 6394,
+				ExpiryDate = DateTime.UtcNow.AddYears(4),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 2303,
+				ExpiryDate = DateTime.UtcNow.AddYears(4),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 7863,
+				ExpiryDate = DateTime.UtcNow.AddYears(5),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 0975,
+				ExpiryDate = DateTime.UtcNow.AddYears(2),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 1212,
+				ExpiryDate = DateTime.UtcNow.AddYears(2),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 3465,
+				ExpiryDate = DateTime.UtcNow.AddYears(1),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 7893,
+				ExpiryDate = DateTime.UtcNow.AddYears(1),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 4234,
+				ExpiryDate = DateTime.UtcNow.AddYears(2),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 4895,
+				ExpiryDate = DateTime.UtcNow.AddYears(5),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 0976,
+				ExpiryDate = DateTime.UtcNow.AddYears(2),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 0303,
+				ExpiryDate = DateTime.UtcNow.AddYears(3),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 1214,
+				ExpiryDate = DateTime.UtcNow.AddYears(3),
+				GatewayToken = new Guid().ToString()
+			},
+			new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				LastFour = 5665,
+				ExpiryDate = DateTime.UtcNow.AddYears(4),
+				GatewayToken = new Guid().ToString()
+			}
+		];
+	}
+}

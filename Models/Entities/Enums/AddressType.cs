@@ -13,6 +13,6 @@ public enum AddressType {
 	Unknown = 0,
 	Personal = 1,
 	Shipping = 2,
-	Billing = 3
+	Billing = 3,
+	Business = 4
 }
-

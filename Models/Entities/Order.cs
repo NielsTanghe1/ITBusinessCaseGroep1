@@ -42,8 +42,31 @@ public class Order : BaseEntity {
 	/// Gets or sets the status of this entity.
 	/// </summary>
 	[Display(Name = "Status")]
-	public required StatusType Status {
+	public StatusType Status {
 		get; set;
+	} = StatusType.Pending;
+
+	/// <summary>
+	/// Generates a fixed set of <see cref="Order"/> entities for seeding purposes.
+	/// </summary>
+	/// <param name="customerIds">
+	/// An array of customer identifiers. Identifiers are pseudo-randomly mapped to one or more
+	/// generated <see cref="PaymentDetail"/> instance.
+	/// </param>
+	/// <returns>
+	/// An array of <see cref="Order"/> objects containing predefined order data
+	/// associated with the provided customer identifiers.
+	/// </returns>
+	public static Order[] SeedingData(long[] customerIds) {
+		Random rnd = new();
+		var orders = new Order[20];
+
+		for (int i = 0; i < orders.Length; i++) {
+			orders[i] = new() {
+				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+			};
+		}
+
+		return orders;
 	}
 }
-

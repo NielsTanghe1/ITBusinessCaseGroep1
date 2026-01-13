@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-01-13
+
+Updated all entity models in `/Models/Entities/` to align with new domain insights and support predefined seeding data.
+
+### Added
+
+Added SeedingData methods to multiple entities (Address, Coffee, Customer, Order, OrderItem, PaymentDetail) for generating sample data.
+
+Replaced Product and ProductType with new Coffee and CoffeeType models for domain accuracy.
+
+Added CoffeeName enum defining supported coffee varieties (Unknown, Arabica, Robusta, Liberica, Excelsa).
+
+### Changed
+
+Adjusted enumeration values:
+- AddressType: added Business.
+- CoffeeType: simplified to relevant values (Unknown, Roasted, Grounded, Raw).
+- StatusType: removed Shipped; added Confirmed and Canceled.
+
+Updated Order entity to make Status optional with a default value of Pending.
+
+Updated OrderItem to reference the new Coffee type	and name instead of Product.
+
+Changed PaymentDetail.LastFour type from string to int for stronger typing and data consistency.
+
 ## [1.3.0] - 2026-01-13
 
 ### Added
@@ -20,14 +45,14 @@ Introduced initial entity models defined by the ERD schema:
 
 Add new Models project with initial structure and configuration.
 - Add relevant files:
-  - Models.csproj and Models.sln.
+  - `Models.csproj` and `Models.sln`.
 
 Add folders to Models:
-- Entities/DTO/
-- Extensions\Mappings/
-- Migrations/
-- Data/
-- Resources/
+- `Entities/DTO/`
+- `Extensions/Mappings/`
+- `Migrations/`
+- `Data/`
+- `Resources/`
 
 ## [1.1.0] - 2026-01-09
 
@@ -82,6 +107,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.4.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.4.0
 [1.3.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.3.0
 [1.2.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.2.0
 [1.1.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.1.0
