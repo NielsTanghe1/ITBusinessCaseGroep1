@@ -116,7 +116,7 @@ public class Address : BaseEntity {
 		return [
 			new() {
 				CustomerId = customerIds[0],
-				Type = AddressType.Home,
+				Type = AddressType.Personal,
 				Street = "Korenveldstraat",
 				HouseNumber = 12,
 				City = "Zavelgem",
@@ -156,7 +156,7 @@ public class Address : BaseEntity {
 			},
 			new () {
 				CustomerId = customerIds[4],
-				Type = AddressType.Home,
+				Type = AddressType.Personal,
 				Street = "Beukenlaan",
 				HouseNumber = 33,
 				City = "Ravenbeek",
@@ -196,7 +196,7 @@ public class Address : BaseEntity {
 			},
 			new() {
 				CustomerId = customerIds[8],
-				Type = AddressType.Home,
+				Type = AddressType.Personal,
 				Street = "Bosrandweg",
 				HouseNumber = 56,
 				City = "Groenwoud",
