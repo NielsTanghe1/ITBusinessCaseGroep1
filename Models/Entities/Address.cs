@@ -1,15 +1,16 @@
-﻿using Models.Entities.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using Models.Entities.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Models.Entities;
 
 /// <summary>
-/// Represents a physical or mailing address associated with a customer.
+/// Represents a physical or mailing address associated with a user.
 /// </summary>
 /// <remarks>
 /// The <see cref="Address"/> class encapsulates address details such as street, city,
-/// postal code, and country, and associates them with a specific customer. Each address
-/// is uniquely identified by its <see cref="AddressID"/> and can be categorized by its
+/// postal code, and country, and associates them with a specific user. Each address
+/// is uniquely identified by its <see cref="Id"/> and can be categorized by its
 /// <see cref="Type"/> (for example, billing or shipping). The class supports both
 /// physical and mailbox addresses.
 /// </remarks>
@@ -24,18 +25,19 @@ public class Address : BaseEntity {
 	}
 
 	/// <summary>
-	/// Gets or sets the foreign key of the customer associated with this entity.
+	/// Gets or sets the foreign key of the user associated with this entity.
 	/// </summary>
-	[Display(Name = "CustomerId")]
-	public required long CustomerId {
+	[Display(Name = "CoffeeUserId")]
+	public required long CoffeeUserId {
 		get; set;
 	}
 
 	/// <summary>
-	/// Gets or sets the customer associated with this entity.
+	/// Gets or sets the user associated with this entity.
 	/// </summary>
-	[Display(Name = "Customer")]
-	public Customer? Customer {
+	[DeleteBehavior(DeleteBehavior.Cascade)]
+	[Display(Name = "CoffeeUser")]
+	public CoffeeUser? CoffeeUser {
 		get; set;
 	}
 
@@ -104,18 +106,18 @@ public class Address : BaseEntity {
 	/// <summary>
 	/// Generates a fixed set of <see cref="Address"/> entities for seeding purposes.
 	/// </summary>
-	/// <param name="customerIds">
-	/// An array of customer identifiers. Each index is mapped directly to one
+	/// <param name="userIds">
+	/// An array of user identifiers. Each index is mapped directly to one
 	/// generated <see cref="Address"/> instance, ensuring at minimum a one-to-one relationship.
 	/// </param>
 	/// <returns>
 	/// An array of <see cref="Address"/> objects containing predefined address data
-	/// associated with the provided customer identifiers.
+	/// associated with the provided user identifiers.
 	/// </returns>
-	public static Address[] SeedingData(long[] customerIds) {
+	public static Address[] SeedingData(long[] userIds) {
 		return [
 			new() {
-				CustomerId = customerIds[0],
+				CoffeeUserId = userIds[0],
 				Type = AddressType.Personal,
 				Street = "Korenveldstraat",
 				HouseNumber = 12,
@@ -125,7 +127,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new() {
-				CustomerId = customerIds[1],
+				CoffeeUserId = userIds[1],
 				Type = AddressType.Shipping,
 				Street = "Lindenhoflaan",
 				HouseNumber = 47,
@@ -135,7 +137,7 @@ public class Address : BaseEntity {
 				UnitNumber = "B2"
 			},
 			new() {
-				CustomerId = customerIds[2],
+				CoffeeUserId = userIds[2],
 				Type = AddressType.Billing,
 				Street = "Vijverparkweg",
 				HouseNumber = 5,
@@ -145,7 +147,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new () {
-				CustomerId = customerIds[3],
+				CoffeeUserId = userIds[3],
 				Type = AddressType.Business,
 				Street = "Industriehaven",
 				HouseNumber = 102,
@@ -155,7 +157,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new () {
-				CustomerId = customerIds[4],
+				CoffeeUserId = userIds[4],
 				Type = AddressType.Personal,
 				Street = "Beukenlaan",
 				HouseNumber = 33,
@@ -165,7 +167,7 @@ public class Address : BaseEntity {
 				UnitNumber = "1A"
 			},
 			new () {
-				CustomerId = customerIds[5],
+				CoffeeUserId = userIds[5],
 				Type = AddressType.Shipping,
 				Street = "Kasteelstraat",
 				HouseNumber = 89,
@@ -175,7 +177,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new () {
-				CustomerId = customerIds[6],
+				CoffeeUserId = userIds[6],
 				Type = AddressType.Billing,
 				Street = "Molenakker",
 				HouseNumber = 14,
@@ -185,7 +187,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new () {
-				CustomerId = customerIds[7],
+				CoffeeUserId = userIds[7],
 				Type = AddressType.Business,
 				Street = "Handelsplein",
 				HouseNumber = 7,
@@ -195,7 +197,7 @@ public class Address : BaseEntity {
 				UnitNumber = "3C"
 			},
 			new() {
-				CustomerId = customerIds[8],
+				CoffeeUserId = userIds[8],
 				Type = AddressType.Personal,
 				Street = "Bosrandweg",
 				HouseNumber = 56,
@@ -205,7 +207,7 @@ public class Address : BaseEntity {
 				UnitNumber = null
 			},
 			new() {
-				CustomerId = customerIds[9],
+				CoffeeUserId = userIds[9],
 				Type = AddressType.Shipping,
 				Street = "Zonnewijzerstraat",
 				HouseNumber = 21,

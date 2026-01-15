@@ -1,5 +1,6 @@
 ﻿using Models.Entities.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models.Entities;
 
@@ -42,7 +43,12 @@ public class Coffee : BaseEntity {
 	/// <summary>
 	/// Gets or sets the price of this entity.
 	/// </summary>
-	[Range(0, 50)]
+	/// <remarks>
+	/// Has a range limit between 0 and 50.00 but is allowed to contain a total of 18 digits.
+	/// </remarks>
+	[DataType(DataType.Currency)]
+	[Column(TypeName = "decimal(18, 2)")]
+	[Range(typeof(decimal), "0.00", "50.00")]
 	[Display(Name = "Price")]
 	public required decimal Price {
 		get; set;

@@ -1,15 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models.Entities;
 
 /// <summary>
-/// Represents payment information associated with a customer, including account
+/// Represents payment information associated with a user, including account
 /// details, expiration, and payment
 /// gateway data.
 /// </summary>
 /// <remarks>
 /// The <see cref="PaymentDetail"/> class is used to store and manage payment-related
-/// data for a customer, such as the last four digits of a bank account, expiration
+/// data for a user, such as the last four digits of a bank account, expiration
 /// date, and a token from a payment gateway service (for example, Stripe, PayPal, or
 /// Payconiq). This class is typically used in scenarios where payment details need to
 /// be referenced or validated without storing sensitive account information.
@@ -19,24 +20,25 @@ public class PaymentDetail : BaseEntity {
 	/// Gets or sets the primary key of this entity.
 	/// </summary>
 	[Key]
-	[Display(Name = "PaymentInfoId")]
+	[Display(Name = "PaymentDetailsId")]
 	public long Id {
 		get; private set;
 	}
 
 	/// <summary>
-	/// Gets or sets the foreign key of the customer associated with this entity.
+	/// Gets or sets the foreign key of the user associated with this entity.
 	/// </summary>
-	[Display(Name = "CustomerId")]
-	public required long CustomerId {
+	[Display(Name = "CoffeeUserId")]
+	public required long CoffeeUserId {
 		get; set;
 	}
 
 	/// <summary>
-	/// Gets or sets the customer associated with this entity.
+	/// Gets or sets the user associated with this entity.
 	/// </summary>
-	[Display(Name = "Customer")]
-	public Customer? Customer {
+	[DeleteBehavior(DeleteBehavior.Cascade)]
+	[Display(Name = "CoffeeUser")]
+	public CoffeeUser? CoffeeUser {
 		get; set;
 	}
 
@@ -74,97 +76,97 @@ public class PaymentDetail : BaseEntity {
 	/// <summary>
 	/// Generates a fixed set of <see cref="PaymentDetail"/> entities for seeding purposes.
 	/// </summary>
-	/// <param name="customerIds">
-	/// An array of customer identifiers. Identifiers are pseudo-randomly mapped to one
+	/// <param name="userIds">
+	/// An array of user identifiers. Identifiers are pseudo-randomly mapped to one
 	/// generated <see cref="PaymentDetail"/> instance.
 	/// </param>
 	/// <returns>
 	/// An array of <see cref="PaymentDetail"/> objects containing predefined payment detail data
-	/// associated with the provided customer identifiers.
+	/// associated with the provided user identifiers.
 	/// </returns>
-	public static PaymentDetail[] SeedingData(long[] customerIds) {
+	public static PaymentDetail[] SeedingData(long[] userIds) {
 		Random rnd = new();
 		return [
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 8530,
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 6394,
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 2303,
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 7863,
 				ExpiryDate = DateTime.UtcNow.AddYears(5),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 0975,
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 1212,
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 3465,
 				ExpiryDate = DateTime.UtcNow.AddYears(1),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 7893,
 				ExpiryDate = DateTime.UtcNow.AddYears(1),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 4234,
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 4895,
 				ExpiryDate = DateTime.UtcNow.AddYears(5),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 0976,
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 0303,
 				ExpiryDate = DateTime.UtcNow.AddYears(3),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 1214,
 				ExpiryDate = DateTime.UtcNow.AddYears(3),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
-				CustomerId = customerIds[rnd.Next(customerIds.Length)],
+				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
 				LastFour = 5665,
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()

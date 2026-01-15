@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-01-15
+
+### Changed
+
+Renamed Customer entity and related references to CoffeeUser for consistent domain terminology.
+
+Expanded CoffeeUser.SeedingData() with four new sample users and marked all seed user emails as confirmed.
+
+Updated entity relationships in Address, Order, OrderItem, and PaymentDetail to explicitly define DeleteBehavior.
+
+Added data annotations to price-related properties for validation and precision:
+- Coffee.Price: restricted range between 0.00 and 50.00.
+- OrderItem.PriceAtPurchase: restricted range between 0.00 and 150000.00.
+
+Updated PaymentDetail.Id display name from PaymentInfoId to PaymentDetailsId.
+
 ## [1.4.1] - 2026-01-14
 
 ### Fixed
@@ -113,6 +129,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.5.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.5.0
 [1.4.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.4.1
 [1.4.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.4.0
 [1.3.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.3.0

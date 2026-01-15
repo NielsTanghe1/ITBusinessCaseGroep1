@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models.Entities;
 
@@ -33,6 +35,7 @@ public class OrderItem : BaseEntity {
 	/// <summary>
 	/// Gets or sets the order associated with this entity.
 	/// </summary>
+	[DeleteBehavior(DeleteBehavior.Cascade)]
 	[Display(Name = "Order")]
 	public Order? Order {
 		get; set;
@@ -49,6 +52,7 @@ public class OrderItem : BaseEntity {
 	/// <summary>
 	/// Gets or sets the coffee associated with this entity.
 	/// </summary>
+	[DeleteBehavior(DeleteBehavior.Restrict)]
 	[Display(Name = "Coffee")]
 	public Coffee? Coffee {
 		get; set;
@@ -66,7 +70,12 @@ public class OrderItem : BaseEntity {
 	/// <summary>
 	/// Gets or sets the price of the total amount of <see cref="Coffee"/> at the time of purchase.
 	/// </summary>
-	[Range(0, 150000)]
+	/// <remarks>
+	/// Has a range limit between 0 and 150000.00 but is allowed to contain a total of 18 digits.
+	/// </remarks>
+	[DataType(DataType.Currency)]
+	[Column(TypeName = "decimal(18, 2)")]
+	[Range(typeof(decimal), "0.00", "150000.00")]
 	[Display(Name = "PriceAtPurchase")]
 	public required decimal PriceAtPurchase {
 		get; set;
