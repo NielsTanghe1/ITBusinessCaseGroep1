@@ -9,8 +9,8 @@
 
 This repository contains an end-to-end integration project created as part of the IT Business Case course. The objective is to design and implement an application that communicates with **Salesforce** using **RabbitMQ** as a message broker.
 
-**Goal**  
-Sales representatives can quickly enter an order using a smartphone application. That order data is then asynchronously sent to Salesforce through RabbitMQ.
+**Goal**
+Sales representatives can quickly enter an order using a web application. That order data is then asynchronously sent to Salesforce through RabbitMQ.
 
 ![Route visual][1]
 
@@ -85,4 +85,4 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ---
 
-[1]: ./Resources/Images/image-1.png "Route visual"
+[1]: Web/Resources/Images/route_visual_1.jpg "Route visual"
