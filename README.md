@@ -68,6 +68,7 @@ Depending on the configuration, ensure RabbitMQ and Salesforce credentials are a
 * Salesforce Developer Documentation
 * RabbitMQ Documentation
 * Microsoft .NET Documentation
+* [Inject JavaScript to open a URL](https://stackoverflow.com/a/79306770)
 
 ### Used NuGet packages
 
