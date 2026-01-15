@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-01-15
+
+### Added
+
+Introduced LocalDbContext in `/Models/Data/` to define database structure, configuration, and entity relationships.
+
+Implemented in LocalDbContext:
+- DbSet properties for all entities (excluding base entities).
+- OnModelCreating() for key naming, identity property configuration, and enum conversions.
+- OnConfiguring() for SQL Server connection setup via configuration.
+- Seeder() method to populate test data using entity SeedingData() methods.
+
+Added initial create migration (InitialCreate) and supporting files in /Models/Migrations/.
+
+### Changed
+
+Updated /Web/appsettings.json to restore ConnectionStrings with a LocalDbContextConnection entry.
+
 ## [1.5.0] - 2026-01-15
 
 ### Changed
@@ -129,6 +147,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.6.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.0
 [1.5.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.5.0
 [1.4.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.4.1
 [1.4.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.4.0
