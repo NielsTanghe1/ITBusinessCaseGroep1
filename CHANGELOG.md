@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-01-16
+
+### Added
+
+Added BaseDbContext abstract base class to centralize shared entity sets and configuration across database contexts.
+
+Added GlobalDbContext concrete implementation for backup server database connectivity.
+
+### Changed
+
+Updated `/Web/Program.cs` to:
+- Register LocalDbContext and GlobalDbContext services in dependency injection.
+- Configure CoffeeUser as the identity model with LocalDbContext as the Entity Framework store.
+- Add automatic seeding of local database with test data on application startup.
+
+Updated LocalDbContext to inherit from BaseDbContext and removed redundant OnConfiguring() method.
+
+Removed ConnectionStrings from `/Web/appsettings.json` (now using user secrets for sensitive configuration).
+
+Mapped Razor Pages for web routing.
+
 ## [1.6.1] - 2026-01-15
 
 ### Fixed
@@ -153,6 +174,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.7.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.7.0
 [1.6.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.1
 [1.6.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.0
 [1.5.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.5.0
