@@ -1,15 +1,22 @@
 ﻿namespace ITBusinessCase.Contracts;
 
 public record OrderLine(
-	 string ProductId,
-	 string ProductName,
-	 decimal UnitPrice,
-	 int Quantity,
+	 string BeanId,
+	 string BeanName,
+	 string ProductType,
+	 int Kg,
+	 decimal UnitPricePerKg,
 	 decimal LineTotal
 );
 
 public record OrderSubmitted(
 	 Guid OrderId,
+
+	 // ✅ UNIEKE USER INFO
+	 string UserId,
+	 string UserName,
+
+	 // ✅ KLANT INFO
 	 string FirstName,
 	 string LastName,
 	 string Email,
@@ -18,6 +25,8 @@ public record OrderSubmitted(
 	 string City,
 	 string Postcode,
 	 string Country,
+
+	 // ✅ ORDER INFO
 	 decimal Total,
 	 IReadOnlyList<OrderLine> Lines
 );

@@ -1,24 +1,26 @@
-﻿using MassTransit;
-using Microsoft.AspNetCore.Mvc;
-using ITBusinessCase.Contracts;
+﻿using ITBusinessCase.Contracts;
 using ITBusinessCase.Data;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace ITBusinessCase.Controllers;
 
 [ApiController]
 [Route("api/messages")]
 public class MessagesController : ControllerBase {
-	private readonly IPublishEndpoint _publishEndpoint;
+	private readonly IPublishEndpoint _publish;
 
-	public MessagesController(IPublishEndpoint publishEndpoint) {
-		_publishEndpoint = publishEndpoint;
+	public MessagesController(IPublishEndpoint publish) {
+		_publish = publish;
 	}
 
-	// Voor snelle tests via PowerShell/Postman (1 product)
-	// vb:
-	// POST http://localhost:5264/api/messages/order?productId=espresso&qty=2&firstName=Robin&lastName=Test&email=a@b.be&street=Test&postbus=1&city=Brussel&postcode=1000&country=BE
+	// POST http://localhost:5264/api/messages/order?beanId=arabica&type=Roasted&kg=2&firstName=Robin&lastName=Test&email=a@b.be&street=Test&postbus=1&city=Brussel&postcode=1000&country=BE
 	[HttpPost("order")]
 	public async Task<IActionResult> PublishOrder(
-		 [FromQuery] string productId,
-		 [FromQuery] int qty,
+		 [FromQuery] string beanId,
+		 [FromQuery] string type,
+		 [FromQuery] int kg,
 		 [FromQuery] string firstName,
 		 [FromQuery] string lastName,
 		 [FromQuery] string email,
@@ -28,25 +30,29 @@ public class MessagesController : ControllerBase {
 		 [FromQuery] string postcode,
 		 [FromQuery] string country
 	) {
-		var product = CoffeeCatalog.Items.FirstOrDefault(x => x.Id == productId);
-		if (product is null)
-			return BadRequest($"Onbekend productId: {productId}");
+		beanId = (beanId ?? "").Trim().ToLower();
+		type = string.IsNullOrWhiteSpace(type) ? "Roasted" : type.Trim();
+		if (kg <= 0)
+			kg = 1;
 
-		if (qty <= 0)
-			qty = 1;
+		var bean = BeanCatalog.Beans.FirstOrDefault(b => b.Id == beanId);
+		if (bean is null)
+			return BadRequest($"Onbekende beanId: {beanId}");
 
-		var line = new OrderLine(
-			 product.Id,
-			 product.Name,
-			 product.Price,
-			 qty,
-			 product.Price * qty
-		);
+		var unit = BeanCatalog.GetPricePerKg(type, bean.Id);
+		var lineTotal = unit * kg;
 
-		var total = line.LineTotal;
+		var line = new OrderLine(bean.Id, bean.Name, type, kg, unit, lineTotal);
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous";
+		var userName = User.Identity?.Name ?? "anonymous";
 
 		var message = new OrderSubmitted(
 			 Guid.NewGuid(),
+
+			 userId,
+			 userName,
+
 			 firstName,
 			 lastName,
 			 email,
@@ -55,12 +61,12 @@ public class MessagesController : ControllerBase {
 			 city,
 			 postcode,
 			 country,
-			 total,
+			 lineTotal,
 			 new List<OrderLine> { line }
 		);
 
-		await _publishEndpoint.Publish(message);
+		await _publish.Publish(message);
 
-		return Ok(new { published = true, total });
+		return Ok(new { published = true, userId, userName, total = lineTotal });
 	}
 }

@@ -1,37 +1,24 @@
-﻿using System.Text.Json;
-using ITBusinessCase.Contracts;
-using ITBusinessCase.Data;
-using ITBusinessCase.Models;
+﻿using ITBusinessCase.Contracts;
 using MassTransit;
 
 namespace ITBusinessCase.Consumers;
 
 public class OrderSubmittedConsumer : IConsumer<OrderSubmitted> {
-	private readonly ApplicationDbContext _db;
+	public Task Consume(ConsumeContext<OrderSubmitted> context) {
+		var m = context.Message;
 
-	public OrderSubmittedConsumer(ApplicationDbContext db) {
-		_db = db;
-	}
+		Console.WriteLine($"[ORDER] {m.OrderId}");
+		Console.WriteLine($"[USER]  {m.UserId} ({m.UserName})");
+		Console.WriteLine($"{m.FirstName} {m.LastName} - {m.Email}");
+		Console.WriteLine($"Adres: {m.Street}, {m.Postcode} {m.City}, {m.Country} (Postbus: {m.Postbus})");
+		Console.WriteLine($"Totaal: €{m.Total:0.00}");
 
-	public async Task Consume(ConsumeContext<OrderSubmitted> context) {
-		Console.WriteLine("📦 BESTELLING ONTVANGEN VIA RABBITMQ");
-		Console.WriteLine($"OrderId: {context.Message.OrderId}");
+		Console.WriteLine("Items:");
+		foreach (var l in m.Lines) {
+			Console.WriteLine($" - {l.ProductType} {l.BeanName} {l.Kg}KG @ €{l.UnitPricePerKg:0.00}/kg = €{l.LineTotal:0.00}");
+		}
 
-		var payloadJson = JsonSerializer.Serialize(context.Message);
-
-		var fullName = $"{context.Message.FirstName} {context.Message.LastName}".Trim();
-
-		var order = new Order {
-			OrderId = context.Message.OrderId.ToString(),
-			CreatedAtUtc = DateTime.UtcNow,
-			Status = "Submitted",
-			CustomerEmail = context.Message.Email,
-			CustomerName = fullName,
-			PayloadJson = payloadJson
-			// UserId vullen we via publish (zie verder) OF laten we null
-		};
-
-		_db.Orders.Add(order);
-		await _db.SaveChangesAsync();
+		Console.WriteLine("--------------------------------------------------");
+		return Task.CompletedTask;
 	}
 }

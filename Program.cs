@@ -1,22 +1,25 @@
 ﻿using MassTransit;
 using ITBusinessCase.Consumers;
 using ITBusinessCase.Data;
-using Microsoft.AspNetCore.Authorization;
+using ITBusinessCase.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// MVC
+builder.Services.AddControllersWithViews();
+
 // =======================
-// DATABASE + IDENTITY (SQLITE)
+// DATABASE + IDENTITY (SQLite)
 // =======================
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-	 options.UseSqlite(
-		  builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>(options => {
+	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 	options.Password.RequireDigit = false;
+	options.Password.RequireLowercase = false;
 	options.Password.RequireUppercase = false;
 	options.Password.RequireNonAlphanumeric = false;
 	options.Password.RequiredLength = 6;
@@ -24,48 +27,53 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Login redirect
 builder.Services.ConfigureApplicationCookie(options => {
 	options.LoginPath = "/Account/Login";
 	options.AccessDeniedPath = "/Account/Login";
 });
 
 // =======================
-// MVC (LOGIN VERPLICHT)
+// EMAIL (DI REGISTRATIE) ✅
 // =======================
-builder.Services.AddControllersWithViews(options => {
-	var policy = new AuthorizationPolicyBuilder()
-		 .RequireAuthenticatedUser()
-		 .Build();
-
-	options.Filters.Add(new AuthorizeFilter(policy));
-});
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 // =======================
 // MASS TRANSIT + RABBITMQ
 // =======================
 builder.Services.AddMassTransit(x => {
-	// ✅ Consumer registreren
 	x.AddConsumer<OrderSubmittedConsumer>();
 
-	// ✅ RabbitMQ configuratie
 	x.UsingRabbitMq((context, cfg) =>
 	{
-		cfg.Host("10.2.160.222", 5672, "/", h =>
+		var rabbit = builder.Configuration.GetSection("RabbitMq");
+
+		var host = rabbit["Host"] ?? "10.2.160.222";
+		var vhost = rabbit["VirtualHost"] ?? "/";
+		var username = rabbit["Username"] ?? "admin";
+		var password = rabbit["Password"] ?? "curler-squishy-monogamy";
+		var port = rabbit.GetValue<int?>("Port") ?? 5672;
+
+		var vhostPath = (vhost == "/" || string.IsNullOrWhiteSpace(vhost))
+			 ? ""
+			 : "/" + vhost.TrimStart('/');
+
+		var uri = new Uri($"rabbitmq://{host}:{port}{vhostPath}");
+
+		cfg.Host(uri, h =>
 		{
-			h.Username("admin");
-			h.Password("curler-squishy-monogamy");
+			h.Username(username);
+			h.Password(password);
 		});
 
-		// ✅ Automatisch exchanges, queues & bindings
-		cfg.ReceiveEndpoint("order-submitted-queue", e =>
-		{
-			e.ConfigureConsumer<OrderSubmittedConsumer>(context);
-		});
+		cfg.ConfigureEndpoints(context);
 	});
 });
 
 var app = builder.Build();
+
+// ✅ Admin seeding (als je dit al had, laten staan)
+await IdentitySeed.EnsureAdminAsync(app.Services);
 
 // =======================
 // MIDDLEWARE
@@ -76,18 +84,15 @@ if (!app.Environment.IsDevelopment()) {
 }
 
 app.UseStaticFiles();
-
-// app.UseHttpsRedirection(); // optioneel
+// app.UseHttpsRedirection();
 
 app.UseRouting();
 
-// Identity middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
 	 name: "default",
 	 pattern: "{controller=Home}/{action=Index}/{id?}");
-await IdentitySeed.EnsureAdminAsync(app.Services);
 
 app.Run();
