@@ -1,76 +1,98 @@
-﻿using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using ITBusinessCase.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ITBusinessCase.Controllers;
 
-[AllowAnonymous]
 public class AccountController : Controller {
-	[HttpGet]
-	public IActionResult Login(string? returnUrl = null) {
-		ViewBag.ReturnUrl = returnUrl;
-		return View();
+	private readonly UserManager<IdentityUser> _userManager;
+	private readonly SignInManager<IdentityUser> _signInManager;
+
+	public AccountController(
+		 UserManager<IdentityUser> userManager,
+		 SignInManager<IdentityUser> signInManager) {
+		_userManager = userManager;
+		_signInManager = signInManager;
 	}
 
+	// --------
+	// LOGIN UI
+	// --------
+	[AllowAnonymous]
+	[HttpGet]
+	public IActionResult Login() {
+		return View(new LoginRegisterViewModel());
+	}
+
+	[AllowAnonymous]
 	[HttpPost]
-	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Login(string username, string password, string? returnUrl = null) {
-		ViewBag.ReturnUrl = returnUrl;
+	public async Task<IActionResult> Login(LoginRegisterViewModel model) {
+		// ✅ Alleen login velden valideren
+		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterEmail));
+		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterPassword));
+		ModelState.Remove(nameof(LoginRegisterViewModel.ConfirmPassword));
 
-		username = (username ?? "").Trim();
+		if (!ModelState.IsValid)
+			return View(model);
 
-		// ✅ Demo login check (pas dit aan als je meerdere accounts wil)
-		// Voorbeeld: je laat iedereen inloggen met password "1234"
-		if (!string.IsNullOrWhiteSpace(username) && password == "1234") {
-			// ✅ Unieke en stabiele UserId per username
-			var userId = CreateStableUserId(username); // string GUID
+		var result = await _signInManager.PasswordSignInAsync(
+			 model.LoginEmail!,
+			 model.LoginPassword!,
+			 isPersistent: false,
+			 lockoutOnFailure: false);
 
-			var claims = new List<Claim>
-			{
-					 new Claim(ClaimTypes.NameIdentifier, userId), // ✅ unieke UserId
-                new Claim(ClaimTypes.Name, username),         // ✅ username
-                new Claim(ClaimTypes.Role, "User")
-				};
+		if (result.Succeeded)
+			return RedirectToAction("Index", "Home");
 
-			var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-			var principal = new ClaimsPrincipal(identity);
+		ModelState.AddModelError("", "Login mislukt. Controleer je email en wachtwoord.");
+		return View(model);
+	}
 
-			await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+	// -----------
+	// REGISTER UI
+	// -----------
+	[AllowAnonymous]
+	[HttpGet]
+	public IActionResult Register() {
+		return View(new LoginRegisterViewModel());
+	}
 
-			if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-				return Redirect(returnUrl);
+	[AllowAnonymous]
+	[HttpPost]
+	public async Task<IActionResult> Register(LoginRegisterViewModel model) {
+		// ✅ Alleen register velden valideren
+		ModelState.Remove(nameof(LoginRegisterViewModel.LoginEmail));
+		ModelState.Remove(nameof(LoginRegisterViewModel.LoginPassword));
 
+		if (!ModelState.IsValid)
+			return View(model);
+
+		var user = new IdentityUser {
+			UserName = model.RegisterEmail,
+			Email = model.RegisterEmail
+		};
+
+		var result = await _userManager.CreateAsync(user, model.RegisterPassword!);
+
+		if (result.Succeeded) {
+			await _signInManager.SignInAsync(user, isPersistent: false);
 			return RedirectToAction("Index", "Home");
 		}
 
-		ViewBag.Error = "Foute gebruikersnaam of wachtwoord.";
-		return View();
+		foreach (var error in result.Errors)
+			ModelState.AddModelError("", error.Description);
+
+		return View(model);
 	}
 
+	// ------
+	// LOGOUT
+	// ------
+	[Authorize]
 	[HttpPost]
-	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Logout() {
-		await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-		return RedirectToAction("Login", "Account");
-	}
-
-	// ✅ Maakt een GUID-achtige UserId die altijd dezelfde blijft voor dezelfde username
-	private static string CreateStableUserId(string username) {
-		// Normalize zodat "Robin" en "robin" dezelfde id geven
-		var normalized = username.Trim().ToLowerInvariant();
-
-		// Hash -> 16 bytes -> Guid
-		using var sha = SHA256.Create();
-		var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(normalized));
-
-		var guidBytes = new byte[16];
-		Array.Copy(hash, guidBytes, 16);
-
-		var guid = new Guid(guidBytes);
-		return guid.ToString();
+		await _signInManager.SignOutAsync();
+		return RedirectToAction("Login");
 	}
 }
