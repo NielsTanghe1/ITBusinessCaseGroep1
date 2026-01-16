@@ -87,4 +87,5 @@ app.MapControllerRoute(
 	 pattern: "{controller=Home}/{action=Index}/{id?}");
 await IdentitySeed.EnsureAdminAsync(app.Services);
 
+
 app.Run();

@@ -4,9 +4,11 @@ using ITBusinessCase.Contracts;
 using ITBusinessCase.Models;
 using ITBusinessCase.Data;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ITBusinessCase.Controllers;
 
+[Authorize]
 public class OrdersController : Controller {
 	private readonly IPublishEndpoint _publish;
 
@@ -73,16 +75,17 @@ public class OrdersController : Controller {
 
 		var totalSum = lines.Sum(l => l.LineTotal);
 
-		// ✅ UserId en UserName uit claims halen
-		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous";
-		var userName = User.Identity?.Name ?? "anonymous";
+		// ✅ Identity unieke UserId (per account verschillend)
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+			 ?? throw new Exception("Geen UserId gevonden. Ben je ingelogd?");
+
+		// ✅ wat er naast het id getoond wordt (kan email/username zijn afhankelijk van je Identity setup)
+		var userName = User.Identity?.Name ?? "unknown";
 
 		var message = new OrderSubmitted(
 			 Guid.NewGuid(),
-
 			 userId,
 			 userName,
-
 			 model.FirstName,
 			 model.LastName,
 			 model.Email,
