@@ -22,8 +22,9 @@ public class OrdersController : Controller {
 			Items = BeanCatalog.Beans
 				  .Select(b => new BeanOrderItemInput {
 					  BeanId = b.Id,
-					  ProductType = "Roasted",
-					  Kg = 0
+					  RoastedKg = 0,
+					  GroundKg = 0,
+					  RawKg = 0
 				  })
 				  .ToList()
 		};
@@ -36,22 +37,15 @@ public class OrdersController : Controller {
 	public async Task<IActionResult> Create(PlaceOrderViewModel model) {
 		model.Items ??= new List<BeanOrderItemInput>();
 
-		model.FirstName = (model.FirstName ?? "").Trim();
-		model.LastName = (model.LastName ?? "").Trim();
-		model.Email = (model.Email ?? "").Trim();
-		model.Street = (model.Street ?? "").Trim();
-		model.Postbus = (model.Postbus ?? "").Trim();
-		model.City = (model.City ?? "").Trim();
-		model.Postcode = (model.Postcode ?? "").Trim();
-		model.Country = (model.Country ?? "").Trim();
-
-		if (!model.Items.Any(i => i.Kg > 0))
-			ModelState.AddModelError("", "Kies minstens één product en zet KG groter dan 0.");
+		// Minstens één type > 0
+		if (!model.Items.Any(i => i.RoastedKg > 0 || i.GroundKg > 0 || i.RawKg > 0))
+			ModelState.AddModelError("", "Kies minstens één producttype en zet KG groter dan 0.");
 
 		if (!ModelState.IsValid) {
+			// zorg dat items er blijven instaan
 			if (model.Items.Count == 0) {
 				model.Items = BeanCatalog.Beans
-					 .Select(b => new BeanOrderItemInput { BeanId = b.Id, ProductType = "Roasted", Kg = 0 })
+					 .Select(b => new BeanOrderItemInput { BeanId = b.Id, RoastedKg = 0, GroundKg = 0, RawKg = 0 })
 					 .ToList();
 			}
 			return View(model);
@@ -59,48 +53,59 @@ public class OrdersController : Controller {
 
 		var beansById = BeanCatalog.Beans.ToDictionary(b => b.Id, b => b);
 
-		var lines = model.Items
-			 .Where(i => i.Kg > 0)
-			 .Select(i => {
-				 if (!beansById.TryGetValue(i.BeanId, out var bean))
-					 throw new Exception($"Onbekende beanId: {i.BeanId}");
+		var lines = new List<OrderLine>();
 
-				 var type = (i.ProductType ?? "Roasted").Trim();
-				 var unit = BeanCatalog.GetPricePerKg(type, bean.Id);
-				 var total = unit * i.Kg;
+		foreach (var item in model.Items) {
+			if (!beansById.TryGetValue(item.BeanId, out var bean))
+				throw new Exception($"Onbekende beanId: {item.BeanId}");
 
-				 return new OrderLine(bean.Id, bean.Name, type, i.Kg, unit, total);
-			 })
-			 .ToList();
+			// helper om lijn toe te voegen
+			void AddLine(string type, int kg) {
+				if (kg <= 0)
+					return;
 
-		var totalSum = lines.Sum(l => l.LineTotal);
+				var unit = BeanCatalog.GetPricePerKg(type, bean.Id);
+				var lineTotal = unit * kg;
 
-		// ✅ Identity unieke UserId (per account verschillend)
-		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-			 ?? throw new Exception("Geen UserId gevonden. Ben je ingelogd?");
+				lines.Add(new OrderLine(
+					 BeanId: bean.Id,
+					 BeanName: bean.Name,
+					 ProductType: type,
+					 Kg: kg,
+					 UnitPricePerKg: unit,
+					 LineTotal: lineTotal
+				));
+			}
 
-		// ✅ wat er naast het id getoond wordt (kan email/username zijn afhankelijk van je Identity setup)
-		var userName = User.Identity?.Name ?? "unknown";
+			AddLine("Roasted", item.RoastedKg);
+			AddLine("Ground", item.GroundKg);
+			AddLine("Raw", item.RawKg);
+		}
+
+		var total = lines.Sum(l => l.LineTotal);
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+		var userName = User.Identity?.Name ?? "";
 
 		var message = new OrderSubmitted(
-			 Guid.NewGuid(),
-			 userId,
-			 userName,
-			 model.FirstName,
-			 model.LastName,
-			 model.Email,
-			 model.Street,
-			 model.Postbus,
-			 model.City,
-			 model.Postcode,
-			 model.Country,
-			 totalSum,
-			 lines
+			 OrderId: Guid.NewGuid(),
+			 UserId: userId,
+			 UserName: userName,
+			 FirstName: model.FirstName ?? "",
+			 LastName: model.LastName ?? "",
+			 Email: model.Email ?? "",
+			 Street: model.Street ?? "",
+			 Postbus: model.Postbus ?? "",
+			 City: model.City ?? "",
+			 Postcode: model.Postcode ?? "",
+			 Country: model.Country ?? "",
+			 Total: total,
+			 Lines: lines
 		);
 
 		await _publish.Publish(message);
 
-		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{totalSum:0.00}";
+		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
 		return RedirectToAction(nameof(Create));
 	}
 }

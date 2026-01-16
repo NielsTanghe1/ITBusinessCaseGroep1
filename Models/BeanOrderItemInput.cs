@@ -1,7 +1,12 @@
-﻿namespace ITBusinessCase.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ITBusinessCase.Models;
 
 public class BeanOrderItemInput {
-	public string BeanId { get; set; } = "";
-	public string ProductType { get; set; } = "Roasted";
-	public int Kg { get; set; } = 0; // aantal KG
+	[Required] public string BeanId { get; set; } = "";
+
+	// Meerdere types tegelijk mogelijk:
+	[Range(0, 999)] public int RoastedKg { get; set; }
+	[Range(0, 999)] public int GroundKg { get; set; }
+	[Range(0, 999)] public int RawKg { get; set; }
 }

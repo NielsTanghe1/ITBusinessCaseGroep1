@@ -1,182 +1,32 @@
 ﻿@model ITBusinessCase.Models.PlaceOrderViewModel
 @using ITBusinessCase.Data
-@using System.Text.Json
 
 @{
-    ViewData["Title"] = "Beans Shop";
-    var beans = BeanCatalog.Beans;
-    var types = BeanCatalog.ProductTypes;
-
-    // prijs-map voor JS: key "Roasted|arabica" => 18
-    var priceMapJson = JsonSerializer.Serialize(BeanCatalog.GetFlatPriceMap());
+    ViewData["Title"] = "Bestelling plaatsen";
+    var beans = BeanCatalog.Beans; // lijst met bonen (Arabica/Robusta/...)
 }
-
-<style>
-    .shop-hero {
-        border-radius: 1.5rem;
-        padding: 1.2rem;
-        background: linear-gradient(135deg, rgba(13,110,253,.10), rgba(25,135,84,.10));
-        border: 1px solid rgba(0,0,0,.06);
-    }
-
-    .product-card {
-        border-radius: 1.25rem;
-        border: 1px solid rgba(0,0,0,.06);
-        background: #fff;
-        overflow: hidden;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    }
-
-        .product-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 .8rem 1.6rem rgba(0,0,0,.08);
-        }
-
-        .product-card.selected {
-            border-color: rgba(25,135,84,.45);
-            box-shadow: 0 .8rem 1.6rem rgba(25,135,84,.08);
-        }
-
-    .product-media {
-        height: 170px;
-        background: #f6f6f6;
-    }
-
-        .product-media img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: cover;
-            object-position: center;
-        }
-
-    .product-body {
-        padding: 1.1rem 1.1rem 1.2rem 1.1rem;
-        display: flex;
-        flex-direction: column;
-        gap: .8rem;
-        flex: 1;
-    }
-
-    .product-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: .75rem;
-    }
-
-    .product-title {
-        font-weight: 800;
-        font-size: 1.25rem;
-        line-height: 1.1;
-        margin: 0;
-    }
-
-    .product-sub {
-        color: rgba(0,0,0,.55);
-        margin-top: .15rem;
-        font-size: .98rem;
-    }
-
-    .price-pill {
-        border-radius: 999px;
-        padding: .35rem .75rem;
-        font-weight: 800;
-        background: rgba(0,0,0,.05);
-        font-size: 1rem;
-        white-space: nowrap;
-    }
-
-    .qty-label {
-        font-weight: 700;
-        margin-bottom: .35rem;
-    }
-
-    .btn-bag {
-        margin-top: auto;
-        border-radius: 999px;
-        font-weight: 800;
-        padding: .9rem 1rem;
-        background: #fd7e14;
-        border: none;
-        color: #111;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .55rem;
-    }
-
-        .btn-bag:hover {
-            filter: brightness(.96);
-        }
-
-    .cart-dropdown {
-        min-width: 360px;
-        border-radius: 1rem;
-        border: 1px solid rgba(0,0,0,.1);
-        box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.1);
-        overflow: hidden;
-    }
-
-    .cart-item {
-        padding: .65rem .9rem;
-        border-bottom: 1px solid rgba(0,0,0,.06);
-    }
-
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-
-    .products-row {
-        row-gap: 1.25rem;
-    }
-</style>
 
 <div class="container py-4">
 
-    <div class="shop-hero mb-4 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
         <div>
-            <h2 class="fw-bold mb-0">🫘 Beans Shop</h2>
-            <div class="text-muted">Alle bestellingen zijn per KG</div>
+            <h2 class="fw-bold mb-0">Shop</h2>
+            <div class="text-muted small">Kies je bonen, type en aantal KG. Voeg toe aan je winkelmand.</div>
         </div>
 
-        <div class="dropdown">
-            <button id="cartBtn"
-                    class="btn btn-outline-primary rounded-pill fw-bold position-relative px-3 dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside">
-                🛒 Tas
-                <span id="cartCountBadge"
-                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="/">Terug</a>
+
+            <!-- Winkelmand knop -->
+            <button class="btn btn-dark position-relative" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
+                🛒 Winkelmand
+                <span id="cartBadge"
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style="display:none;">
+                    0
+                </span>
             </button>
-
-            <div class="dropdown-menu dropdown-menu-end p-0 cart-dropdown">
-                <div class="p-3 border-bottom">
-                    <div class="d-flex justify-content-between">
-                        <strong>Jouw tas</strong>
-                        <strong>€<span id="cartTotalTop">0.00</span></strong>
-                    </div>
-                </div>
-
-                <div id="cartEmpty" class="p-3 text-muted">
-                    Je tas is nog leeg.
-                </div>
-
-                <div id="cartList" class="d-none"></div>
-
-                <div class="p-3 border-top d-flex gap-2">
-                    <button type="button" class="btn btn-outline-danger rounded-pill w-50" id="clearCartBtn">
-                        Leegmaken
-                    </button>
-                    <a href="#checkout" class="btn btn-success rounded-pill w-50">
-                        Checkout
-                    </a>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -188,246 +38,406 @@
         </div>
     }
 
-    <form id="orderForm" asp-action="Create" method="post" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger shadow-sm">
+            <strong>Controleer je invoer:</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <form id="orderForm" asp-action="Create" method="post" class="card shadow-sm border-0 rounded-4">
         @Html.AntiForgeryToken()
 
-        <div class="row g-4 products-row">
-            @for (int i = 0; i < Model.Items.Count; i++)
+        <div class="card-body p-4">
+
+            <!-- Hidden inputs die model binding doen -->
+            @for (int i = 0; i < beans.Count; i++)
             {
-                var bean = beans.First(b => b.Id == Model.Items[i].BeanId);
+                var b = beans[i];
+                <input type="hidden" name="Items[@i].BeanId" value="@b.Id" />
+                <input type="hidden" id="roasted_@i" name="Items[@i].RoastedKg" value="0" />
+                <input type="hidden" id="ground_@i" name="Items[@i].GroundKg" value="0" />
+                <input type="hidden" id="raw_@i" name="Items[@i].RawKg" value="0" />
+            }
 
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="product-card js-product-card" data-bean-id="@bean.Id">
-                        <div class="product-media">
-                            <img src="@bean.ImageUrl" alt="@bean.Name" />
-                        </div>
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <h5 class="fw-semibold mb-0">Producten (per KG)</h5>
+                <div class="text-muted small">
+                    Subtotaal winkelmand: <span class="fw-semibold">€<span id="cartTotal">0.00</span></span>
+                </div>
+            </div>
 
-                        <div class="product-body">
-                            <div class="product-top">
+            <!-- Product grid: 1 kolom mobiel, 2 op md, 3 op lg -->
+            <div class="row g-3">
+                @for (int i = 0; i < beans.Count; i++)
+                {
+                    var b = beans[i];
+                    var priceRoasted = BeanCatalog.GetPricePerKg("Roasted", b.Id);
+                    var priceGround = BeanCatalog.GetPricePerKg("Ground", b.Id);
+                    var priceRaw = BeanCatalog.GetPricePerKg("Raw", b.Id);
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="border rounded-4 p-3 h-100 d-flex flex-column">
+                            <div class="d-flex align-items-start justify-content-between">
                                 <div>
-                                    <p class="product-title">@bean.Name</p>
-                                    <div class="product-sub">@bean.Id</div>
+                                    <div class="fw-bold fs-5">@b.Name</div>
+                                    <div class="text-muted small">@b.Id</div>
                                 </div>
-                                <div class="price-pill">€<span class="js-price">0.00</span>/kg</div>
+                                <span class="badge bg-light text-dark border">per KG</span>
                             </div>
 
-                            <input type="hidden" asp-for="Items[@i].BeanId" />
+                            <hr class="my-3" />
 
-                            <div>
-                                <div class="qty-label">Product type</div>
-                                <select class="form-select js-type"
-                                        asp-for="Items[@i].ProductType"
-                                        data-bean-id="@bean.Id">
-                                    @foreach (var t in types)
-                                    {
-                                        <option value="@t">@t</option>
-                                    }
-                                </select>
+                            <!-- Type blocks -->
+                            <div class="vstack gap-2">
+
+                                <!-- Roasted -->
+                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <div class="fw-semibold">Roasted</div>
+                                        <div class="text-muted small">€@priceRoasted.ToString("0.00")/kg</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select class="form-select form-select-sm qty"
+                                                id="sel_roasted_@i"
+                                                data-index="@i"
+                                                data-type="Roasted"
+                                                style="width: 84px;">
+                                            @for (int kg = 1; kg <= 25; kg++)
+                                            {
+                                                <option value="@kg">@kg kg</option>
+                                            }
+                                        </select>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-success"
+                                                onclick="addToCart(@i, 'Roasted', @priceRoasted.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                            + Toevoegen
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Ground -->
+                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <div class="fw-semibold">Ground</div>
+                                        <div class="text-muted small">€@priceGround.ToString("0.00")/kg</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select class="form-select form-select-sm qty"
+                                                id="sel_ground_@i"
+                                                data-index="@i"
+                                                data-type="Ground"
+                                                style="width: 84px;">
+                                            @for (int kg = 1; kg <= 25; kg++)
+                                            {
+                                                <option value="@kg">@kg kg</option>
+                                            }
+                                        </select>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-success"
+                                                onclick="addToCart(@i, 'Ground', @priceGround.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                            + Toevoegen
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Raw -->
+                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <div class="fw-semibold">Raw</div>
+                                        <div class="text-muted small">€@priceRaw.ToString("0.00")/kg</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select class="form-select form-select-sm qty"
+                                                id="sel_raw_@i"
+                                                data-index="@i"
+                                                data-type="Raw"
+                                                style="width: 84px;">
+                                            @for (int kg = 1; kg <= 25; kg++)
+                                            {
+                                                <option value="@kg">@kg kg</option>
+                                            }
+                                        </select>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-success"
+                                                onclick="addToCart(@i, 'Raw', @priceRaw.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                                            + Toevoegen
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
 
-                            <div>
-                                <div class="qty-label">Aantal (KG)</div>
-                                <select class="form-select js-kg"
-                                        asp-for="Items[@i].Kg"
-                                        data-bean-id="@bean.Id">
-                                    <option value="0">0</option>
-                                    @for (int kg = 1; kg <= 10; kg++)
-                                    {
-                                        <option value="@kg">@kg KG</option>
-                                    }
-                                </select>
+                            <div class="mt-3 text-muted small">
+                                In winkelmand:
+                                <span class="fw-semibold" id="inCart_@i">0</span> kg totaal
                             </div>
 
-                            <div class="text-muted small">
-                                Subtotaal: €<span class="js-lineTotal">0.00</span>
-                            </div>
-
-                            <button type="button" class="btn btn-bag w-100 js-add">
-                                👜 In tas
-                            </button>
+                            <div class="mt-auto pt-2"></div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
 
-        <hr class="my-4" />
+            <hr class="my-4" />
 
-        <div id="checkout" class="card p-4 rounded-4 border-0 shadow-sm">
-            <h5 class="fw-bold mb-3">Gegevens</h5>
+            <h5 class="fw-semibold mb-3">Gegevens</h5>
 
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label" asp-for="FirstName"></label>
-                    <input class="form-control" asp-for="FirstName" placeholder="Voornaam" />
+                    <input class="form-control" asp-for="FirstName" />
                     <div class="text-danger small"><span asp-validation-for="FirstName"></span></div>
                 </div>
-
                 <div class="col-md-4">
                     <label class="form-label" asp-for="LastName"></label>
-                    <input class="form-control" asp-for="LastName" placeholder="Achternaam" />
+                    <input class="form-control" asp-for="LastName" />
                     <div class="text-danger small"><span asp-validation-for="LastName"></span></div>
                 </div>
-
                 <div class="col-md-4">
                     <label class="form-label" asp-for="Email"></label>
-                    <input class="form-control" asp-for="Email" type="email" placeholder="email@voorbeeld.com" />
+                    <input class="form-control" asp-for="Email" type="email" />
                     <div class="text-danger small"><span asp-validation-for="Email"></span></div>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label" asp-for="Street"></label>
-                    <input class="form-control" asp-for="Street" placeholder="Straat + nr" />
+                    <input class="form-control" asp-for="Street" />
                     <div class="text-danger small"><span asp-validation-for="Street"></span></div>
                 </div>
-
                 <div class="col-md-3">
                     <label class="form-label" asp-for="Postbus"></label>
-                    <input class="form-control" asp-for="Postbus" placeholder="Postbus" />
+                    <input class="form-control" asp-for="Postbus" />
                     <div class="text-danger small"><span asp-validation-for="Postbus"></span></div>
                 </div>
-
                 <div class="col-md-3">
                     <label class="form-label" asp-for="City"></label>
-                    <input class="form-control" asp-for="City" placeholder="Stad" />
+                    <input class="form-control" asp-for="City" />
                     <div class="text-danger small"><span asp-validation-for="City"></span></div>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label" asp-for="Postcode"></label>
-                    <input class="form-control" asp-for="Postcode" placeholder="Postcode" />
+                    <input class="form-control" asp-for="Postcode" />
                     <div class="text-danger small"><span asp-validation-for="Postcode"></span></div>
                 </div>
-
                 <div class="col-md-9">
                     <label class="form-label" asp-for="Country"></label>
-                    <input class="form-control" asp-for="Country" placeholder="Land" />
+                    <input class="form-control" asp-for="Country" />
                     <div class="text-danger small"><span asp-validation-for="Country"></span></div>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success btn-lg w-100 mt-4 rounded-pill fw-bold">
-                ✅ Bestelling plaatsen
+            <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-semibold mt-4">
+                Bestelling plaatsen
             </button>
         </div>
     </form>
+</div>
+
+<!-- Offcanvas winkelmand -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartCanvas" aria-labelledby="cartCanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold" id="cartCanvasLabel">🛒 Winkelmand</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="cartEmpty" class="text-muted">
+            Je winkelmand is leeg. Voeg producten toe.
+        </div>
+
+        <div id="cartList" class="vstack gap-2"></div>
+
+        <hr class="my-3" />
+
+        <div class="d-flex justify-content-between">
+            <div class="fw-semibold">Totaal</div>
+            <div class="fw-bold">€<span id="cartTotal2">0.00</span></div>
+        </div>
+
+        <div class="small text-muted mt-2">
+            *De winkelmand vult automatisch de hidden inputs voor je order.
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        const PRICE_MAP = @Html.Raw(priceMapJson);
+        // Cart opslag: key = `${index}|${type}` -> { index, type, beanName, beanId, kg, unitPrice }
+        const cart = new Map();
 
-        function money(n) { return (n || 0).toFixed(2); }
-
-        function getUnitPrice(type, beanId) {
-            const key = `${type}|${beanId}`;
-            return PRICE_MAP[key] || 0;
+        function beanNameByIndex(i) {
+            // neemt de titel uit de kaart
+            const el = document.querySelector(`#inCart_${i}`)?.closest(".border")?.querySelector(".fw-bold");
+            return el ? el.innerText.trim() : `Bean ${i}`;
         }
 
-        function recalcCard(card) {
-            const beanId = card.dataset.beanId;
-            const typeSel = card.querySelector(".js-type");
-            const kgSel = card.querySelector(".js-kg");
-
-            const type = typeSel.value;
-            const kg = parseInt(kgSel.value || "0");
-
-            const unit = getUnitPrice(type, beanId);
-            const lineTotal = unit * kg;
-
-            card.querySelector(".js-price").innerText = money(unit);
-            card.querySelector(".js-lineTotal").innerText = money(lineTotal);
-
-            card.classList.toggle("selected", kg > 0);
-
-            return { beanId, type, kg, unit, lineTotal };
+        function beanIdByIndex(i) {
+            // hidden input Items[i].BeanId
+            const hidden = document.querySelector(`input[name="Items[${i}].BeanId"]`);
+            return hidden ? hidden.value : "";
         }
 
-        function getCartItems() {
-            return Array.from(document.querySelectorAll(".js-product-card"))
-                .map(card => {
-                    const beanName = card.querySelector(".product-title")?.innerText || card.dataset.beanId;
-                    const x = recalcCard(card);
-                    return { ...x, beanName };
-                })
-                .filter(x => x.kg > 0);
+        function setHiddenKg(i, type, kgTotalForType) {
+            if (type === "Roasted") document.getElementById(`roasted_${i}`).value = kgTotalForType;
+            if (type === "Ground")  document.getElementById(`ground_${i}`).value  = kgTotalForType;
+            if (type === "Raw")     document.getElementById(`raw_${i}`).value     = kgTotalForType;
         }
 
-        function renderCart() {
-            const items = getCartItems();
-            const badge = document.getElementById("cartCountBadge");
-            const totalEl = document.getElementById("cartTotalTop");
-            const list = document.getElementById("cartList");
-            const empty = document.getElementById("cartEmpty");
+        function getHiddenKg(i, type) {
+            if (type === "Roasted") return parseInt(document.getElementById(`roasted_${i}`).value || "0");
+            if (type === "Ground")  return parseInt(document.getElementById(`ground_${i}`).value  || "0");
+            if (type === "Raw")     return parseInt(document.getElementById(`raw_${i}`).value     || "0");
+            return 0;
+        }
 
-            badge.textContent = items.reduce((a, b) => a + b.kg, 0);
-            totalEl.textContent = money(items.reduce((a, b) => a + b.lineTotal, 0));
+        function addToCart(index, type, unitPrice) {
+            const typeLower = type.toLowerCase();
+            const sel = document.getElementById(`sel_${typeLower}_${index}`);
+            const kgToAdd = parseInt(sel?.value || "1");
+            const price = parseFloat(unitPrice);
 
-            if (items.length === 0) {
-                empty.classList.remove("d-none");
-                list.classList.add("d-none");
-                list.innerHTML = "";
+            const key = `${index}|${type}`;
+            const existing = cart.get(key);
+
+            const beanName = beanNameByIndex(index);
+            const beanId = beanIdByIndex(index);
+
+            const newKg = (existing?.kg || 0) + kgToAdd;
+
+            cart.set(key, {
+                index,
+                type,
+                beanName,
+                beanId,
+                kg: newKg,
+                unitPrice: price
+            });
+
+            // sync hidden field for this type (total kg for that type)
+            setHiddenKg(index, type, newKg);
+
+            renderCart();
+        }
+
+        function removeFromCart(index, type) {
+            const key = `${index}|${type}`;
+            cart.delete(key);
+
+            // hidden = 0 voor dat type
+            setHiddenKg(index, type, 0);
+
+            renderCart();
+        }
+
+        function changeKg(index, type, delta) {
+            const key = `${index}|${type}`;
+            const item = cart.get(key);
+            if (!item) return;
+
+            const next = item.kg + delta;
+            if (next <= 0) {
+                removeFromCart(index, type);
                 return;
             }
 
-            empty.classList.add("d-none");
-            list.classList.remove("d-none");
+            item.kg = next;
+            cart.set(key, item);
 
-            list.innerHTML = items.map(i => `
-                <div class="cart-item">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <strong>${i.type} ${i.beanName}</strong><br/>
-                            <small>${i.kg} KG × €${money(i.unit)}/kg</small>
-                        </div>
-                        <div class="fw-bold">€${money(i.lineTotal)}</div>
-                    </div>
-                </div>
-            `).join("");
+            setHiddenKg(index, type, next);
+            renderCart();
         }
 
-        // events
-        document.querySelectorAll(".js-product-card").forEach(card => recalcCard(card));
+        function renderCart() {
+            const list = document.getElementById("cartList");
+            const empty = document.getElementById("cartEmpty");
 
-        document.addEventListener("change", e => {
-            const card = e.target.closest(".js-product-card");
-            if (!card) return;
+            list.innerHTML = "";
 
-            if (e.target.classList.contains("js-type") || e.target.classList.contains("js-kg")) {
-                recalcCard(card);
-                renderCart();
+            let totalKgAll = 0;
+            let totalPrice = 0;
+
+            // per product kaart: update "in winkelmand" total kg
+            for (let i = 0; i < @beans.Count; i++) {
+                const roasted = getHiddenKg(i, "Roasted");
+                const ground  = getHiddenKg(i, "Ground");
+                const raw     = getHiddenKg(i, "Raw");
+                const sum = roasted + ground + raw;
+                const label = document.getElementById(`inCart_${i}`);
+                if (label) label.innerText = sum.toString();
             }
-        });
 
-        document.querySelectorAll(".js-add").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const card = btn.closest(".js-product-card");
-                const kgSel = card.querySelector(".js-kg");
-                if (kgSel.value === "0") kgSel.value = "1";
-                recalcCard(card);
-                renderCart();
-                bootstrap.Dropdown.getOrCreateInstance(cartBtn).show();
-            });
-        });
+            for (const [key, item] of cart.entries()) {
+                const lineTotal = item.kg * item.unitPrice;
+                totalKgAll += item.kg;
+                totalPrice += lineTotal;
 
-        document.getElementById("clearCartBtn").addEventListener("click", () => {
-            document.querySelectorAll(".js-kg").forEach(s => s.value = "0");
-            document.querySelectorAll(".js-product-card").forEach(card => recalcCard(card));
-            renderCart();
-        });
+                const row = document.createElement("div");
+                row.className = "border rounded-4 p-3";
 
-        // popup missing fields
+                row.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <div class="fw-semibold">${escapeHtml(item.type)} ${escapeHtml(item.beanName)}</div>
+                            <div class="text-muted small">${escapeHtml(item.beanId)} • €${item.unitPrice.toFixed(2)}/kg</div>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                onclick="removeFromCart(${item.index}, '${item.type}')">
+                            Verwijder
+                        </button>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    onclick="changeKg(${item.index}, '${item.type}', -1)">-</button>
+                            <div class="fw-semibold">${item.kg} kg</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    onclick="changeKg(${item.index}, '${item.type}', 1)">+</button>
+                        </div>
+
+                        <div class="fw-bold">€${lineTotal.toFixed(2)}</div>
+                    </div>
+                `;
+
+                list.appendChild(row);
+            }
+
+            empty.style.display = cart.size === 0 ? "block" : "none";
+
+            // badge + total
+            const badge = document.getElementById("cartBadge");
+            if (totalKgAll > 0) {
+                badge.style.display = "inline-block";
+                badge.innerText = totalKgAll.toString();
+            } else {
+                badge.style.display = "none";
+            }
+
+            document.getElementById("cartTotal").innerText = totalPrice.toFixed(2);
+            document.getElementById("cartTotal2").innerText = totalPrice.toFixed(2);
+        }
+
+        // Basic required fields popup (zoals je eerder wou)
         document.getElementById("orderForm").addEventListener("submit", function (e) {
-            const missing = [];
+            // minstens 1 item in mand (minstens 1 hidden > 0)
+            let hasAny = false;
+            for (let i = 0; i < @beans.Count; i++) {
+                const sum =
+                    getHiddenKg(i, "Roasted") +
+                    getHiddenKg(i, "Ground") +
+                    getHiddenKg(i, "Raw");
+                if (sum > 0) { hasAny = true; break; }
+            }
 
-            const anyProduct = Array.from(document.querySelectorAll(".js-kg"))
-                .some(q => parseInt(q.value || "0") > 0);
-
-            if (!anyProduct) missing.push("Kies minstens één product (KG > 0)");
-
-            const requiredFields = [
+            const requiredIds = [
                 ["FirstName", "Voornaam"],
                 ["LastName", "Achternaam"],
                 ["Email", "Email"],
@@ -435,20 +445,34 @@
                 ["Postbus", "Postbus"],
                 ["City", "Stad"],
                 ["Postcode", "Postcode"],
-                ["Country", "Land"]
+                ["Country", "Land"],
             ];
 
-            for (const [id, label] of requiredFields) {
-                const el = document.getElementById(id);
-                if (!el || !el.value.trim()) missing.push(label);
+            const missing = [];
+            for (const [id, label] of requiredIds) {
+                const val = document.getElementById(id)?.value?.trim();
+                if (!val) missing.push(label);
             }
+
+            if (!hasAny) missing.unshift("Minstens 1 product in winkelmand");
 
             if (missing.length > 0) {
                 e.preventDefault();
-                alert("Je bent het volgende vergeten:\n\n• " + missing.join("\n• "));
+                alert("Je bent dit vergeten in te vullen:\n- " + missing.join("\n- "));
             }
         });
 
+        function escapeHtml(str) {
+            return (str ?? "")
+                .toString()
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        // init
         renderCart();
     </script>
 }
