@@ -1,11 +1,54 @@
 using MassTransit;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Models.Data;
+using Models.Entities;
 using Web.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
 
+// Database contexts
+builder.Services.AddDbContext<LocalDbContext>(options =>
+	options.UseSqlServer(
+		builder.Configuration.GetConnectionString("LocalDbContextConnection")
+		?? throw new InvalidOperationException("Connection string 'LocalDbContextConnection' not found."),
+		options => options.EnableRetryOnFailure(
+			maxRetryCount: 3,
+			maxRetryDelay: TimeSpan.FromSeconds(5),
+			errorNumbersToAdd: [4060]
+		)
+	));
+
+builder.Services.AddDbContext<GlobalDbContext>(options =>
+	options.UseSqlServer(
+		builder.Configuration.GetConnectionString("GlobalDbContextConnection")
+		?? throw new InvalidOperationException("Connection string 'GlobalDbContextConnection' not found."),
+		options => options.EnableRetryOnFailure(
+			maxRetryCount: 3,
+			maxRetryDelay: TimeSpan.FromSeconds(5),
+			errorNumbersToAdd: [4060]
+		)
+	));
+
+// Identity system
+builder.Services
+	.AddIdentity<CoffeeUser, IdentityRole<long>>(options => {
+		options.Password.RequireDigit = false;
+		options.Password.RequireLowercase = false;
+		options.Password.RequireNonAlphanumeric = false;
+		options.Password.RequireUppercase = false;
+		options.Password.RequiredLength = 3;
+		options.Password.RequiredUniqueChars = 1;
+		options.User.RequireUniqueEmail = true;
+		options.SignIn.RequireConfirmedAccount = false;
+	})
+	.AddEntityFrameworkStores<LocalDbContext>();
+
 // MVC
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddRazorPages();
 
 // =======================
 // MASS TRANSIT + RABBITMQ
@@ -28,8 +71,8 @@ builder.Services.AddMassTransit(x => {
 
 		// Build URI: vhost "/" -> no path, otherwise "/<vhost>"
 		var vhostPath = (string.IsNullOrWhiteSpace(vhost) || vhost == "/")
-			 ? string.Empty
-			 : "/" + vhost.TrimStart('/');
+			? string.Empty
+			: "/" + vhost.TrimStart('/');
 
 		var uri = new Uri($"{scheme}://{host}:{port}{vhostPath}");
 
@@ -65,9 +108,21 @@ builder.Services.AddMassTransit(x => {
 
 var app = builder.Build();
 
+// Populate the local database with data
+using (var scope = app.Services.CreateScope()) {
+	var services = scope.ServiceProvider;
+	try {
+		await LocalDbContext.Seeder(services);
+	} catch (Exception ex) {
+		var logger = services.GetRequiredService<ILogger<Program>>();
+		logger.LogError(ex, "An error occurred while seeding the database.");
+	}
+}
+
 // =======================
 // MIDDLEWARE
 // =======================
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
 	app.UseExceptionHandler("/Home/Error");
 	app.UseHsts();
@@ -81,6 +136,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthorization();
+
+app.MapStaticAssets();
+app.MapRazorPages();
 
 app.MapControllerRoute(
 	name: "default",
