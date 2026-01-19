@@ -1,54 +1,64 @@
-using MassTransit;
-using Web.Consumers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Models.Data;
+using Models.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
-bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
 
-builder.Services.AddMassTransit(x => {
-	x.AddConsumer<SalesforceConsumer>();
-	x.AddConsumer<SapIdocConsumer>();
-	x.AddConsumer<OrderCreatedConsumer>(); // Kies voor RabbitMQ als transport
-	x.UsingRabbitMq((context, cfg) => {
-		var host = builder.Configuration["RabbitMQConfig:Host"] ?? "localhost";
-		var user = builder.Configuration["RabbitMQConfig:Username"] ?? "guest";
-		var pass = builder.Configuration["RabbitMQConfig:Password"] ?? "guest";
+// Database contexts
+builder.Services.AddDbContext<LocalDbContext>(options =>
+	options.UseSqlServer(
+		builder.Configuration.GetConnectionString("LocalDbContextConnection")
+		?? throw new InvalidOperationException("Connection string 'LocalDbContextConnection' not found."),
+		options => options.EnableRetryOnFailure(
+			maxRetryCount: 3,
+			maxRetryDelay: TimeSpan.FromSeconds(5),
+			errorNumbersToAdd: [4060]
+		)
+	));
 
-		if (isDebugging && isDebuggingResult) {
-			// Local dev: connect to localhost
-			cfg.Host("localhost", h => {
-				h.Username("guest");
-				h.Password("guest");
-			});
-		} else {
-			// Docker/prod: use container name
-			cfg.Host(host, "/", h => {
-				h.Username(user);
-				h.Password(pass);
-			});
-		}
+builder.Services.AddDbContext<GlobalDbContext>(options =>
+	options.UseSqlServer(
+		builder.Configuration.GetConnectionString("GlobalDbContextConnection")
+		?? throw new InvalidOperationException("Connection string 'GlobalDbContextConnection' not found."),
+		options => options.EnableRetryOnFailure(
+			maxRetryCount: 3,
+			maxRetryDelay: TimeSpan.FromSeconds(5),
+			errorNumbersToAdd: [4060]
+		)
+	));
 
-		// Prep queues in RabbitMQ:
-		cfg.ReceiveEndpoint("order-queue", e => {
-			e.ConfigureConsumer<OrderCreatedConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-
-		cfg.ReceiveEndpoint("salesforce-queue", e => {
-			e.ConfigureConsumer<SalesforceConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-
-		cfg.ReceiveEndpoint("sapidoc-queue", e => {
-			e.ConfigureConsumer<SapIdocConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-	});
-});
+// Identity system
+builder.Services
+	.AddIdentity<CoffeeUser, IdentityRole<long>>(options => {
+		options.Password.RequireDigit = false;
+		options.Password.RequireLowercase = false;
+		options.Password.RequireNonAlphanumeric = false;
+		options.Password.RequireUppercase = false;
+		options.Password.RequiredLength = 3;
+		options.Password.RequiredUniqueChars = 1;
+		options.User.RequireUniqueEmail = true;
+		options.SignIn.RequireConfirmedAccount = false;
+	})
+	.AddEntityFrameworkStores<LocalDbContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddRazorPages();
+
 var app = builder.Build();
+
+// Populate the local database with data
+using (var scope = app.Services.CreateScope()) {
+	var services = scope.ServiceProvider;
+	try {
+		await LocalDbContext.Seeder(services);
+	} catch (Exception ex) {
+		var logger = services.GetRequiredService<ILogger<Program>>();
+		logger.LogError(ex, "An error occurred while seeding the database.");
+	}
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
@@ -63,6 +73,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapRazorPages();
 
 app.MapControllerRoute(
 	name: "default",
