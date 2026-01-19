@@ -26,9 +26,11 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
 
 // Login redirect
 builder.Services.ConfigureApplicationCookie(options => {
-	options.LoginPath = "/Account/Login";
-	options.AccessDeniedPath = "/Account/Login";
+	options.LoginPath = "/Account/Register";
+	options.AccessDeniedPath = "/Account/Register";
 });
+
+
 
 // =======================
 // MVC (LOGIN VERPLICHT)
