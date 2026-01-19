@@ -9,8 +9,8 @@
 
 This repository contains an end-to-end integration project created as part of the IT Business Case course. The objective is to design and implement an application that communicates with **Salesforce** using **RabbitMQ** as a message broker.
 
-**Goal**  
-Sales representatives can quickly enter an order using a smartphone application. That order data is then asynchronously sent to Salesforce through RabbitMQ.
+**Goal**
+Sales representatives can quickly enter an order using a web application. That order data is then asynchronously sent to Salesforce through RabbitMQ.
 
 ![Route visual][1]
 
@@ -68,6 +68,8 @@ Depending on the configuration, ensure RabbitMQ and Salesforce credentials are a
 * Salesforce Developer Documentation
 * RabbitMQ Documentation
 * Microsoft .NET Documentation
+* [Inject JavaScript to open a URL](https://stackoverflow.com/a/79306770)
+* [Install SQL Server on Ubuntu](https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-ubuntu?view=sql-server-ver17&tabs=ubuntu2004%2C2505ubuntu2404%2Codbc-ubuntu-2404)
 
 ### Used NuGet packages
 
@@ -85,4 +87,4 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ---
 
-[1]: ./Resources/Images/image-1.png "Route visual"
+[1]: Web/Resources/Images/route_visual_1.jpg "Route visual"

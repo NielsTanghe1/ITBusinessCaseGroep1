@@ -22,8 +22,8 @@ jobs:
       with:
         dotnet-version: 9.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Web/Web.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Web/Web.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Web/Web.sln --no-build --verbosity normal

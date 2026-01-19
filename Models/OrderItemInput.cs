@@ -1,4 +1,4 @@
-﻿namespace ITBusinessCase.Models;
+﻿namespace Web.Models;
 
 public class OrderItemInput {
 	public string ProductId { get; set; } = "";

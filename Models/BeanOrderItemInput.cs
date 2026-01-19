@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ITBusinessCase.Models;
+namespace Web.Models;
 
 public class BeanOrderItemInput {
 	[Required] public string BeanId { get; set; } = "";
