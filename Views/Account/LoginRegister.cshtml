@@ -1,20 +1,99 @@
 ﻿@model ITBusinessCase.Models.LoginRegisterViewModel
 
+@{
+    ViewData["Title"] = "Login / Register";
+}
+
 <h2>Login</h2>
-<form asp-action="Login" method="post">
-    <input asp-for="LoginEmail" placeholder="Email" />
-    <input asp-for="LoginPassword" type="password" placeholder="Password" />
+<form asp-controller="Account" asp-action="Login" method="post">
+    <div>
+        <label asp-for="LoginEmail"></label>
+        <input asp-for="LoginEmail" />
+        <span asp-validation-for="LoginEmail" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="LoginPassword"></label>
+        <input asp-for="LoginPassword" type="password" />
+        <span asp-validation-for="LoginPassword" class="text-danger"></span>
+    </div>
+
     <button type="submit">Login</button>
 </form>
 
 <hr />
 
-<h2>Account aanmaken</h2>
-<form asp-action="Register" method="post">
-    <input asp-for="RegisterEmail" placeholder="Email" />
-    <input asp-for="RegisterPassword" type="password" placeholder="Password" />
-    <input asp-for="ConfirmPassword" type="password" placeholder="Bevestig password" />
+<h2>Registreren</h2>
+<form asp-controller="Account" asp-action="Register" method="post">
+    <div>
+        <label asp-for="RegisterEmail"></label>
+        <input asp-for="RegisterEmail" />
+        <span asp-validation-for="RegisterEmail" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="RegisterPassword"></label>
+        <input asp-for="RegisterPassword" type="password" />
+        <span asp-validation-for="RegisterPassword" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="ConfirmPassword"></label>
+        <input asp-for="ConfirmPassword" type="password" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <hr />
+
+    <h3>Gegevens (voor automatische invulling bij bestellingen)</h3>
+
+    <div>
+        <label asp-for="FirstName"></label>
+        <input asp-for="FirstName" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="LastName"></label>
+        <input asp-for="LastName" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Street"></label>
+        <input asp-for="Street" />
+        <span asp-validation-for="Street" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Postbus"></label>
+        <input asp-for="Postbus" />
+        <span asp-validation-for="Postbus" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="City"></label>
+        <input asp-for="City" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Postcode"></label>
+        <input asp-for="Postcode" />
+        <span asp-validation-for="Postcode" class="text-danger"></span>
+    </div>
+
+    <div>
+        <label asp-for="Country"></label>
+        <input asp-for="Country" />
+        <span asp-validation-for="Country" class="text-danger"></span>
+    </div>
+
     <button type="submit">Registreren</button>
 </form>
 
-<div asp-validation-summary="All"></div>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
