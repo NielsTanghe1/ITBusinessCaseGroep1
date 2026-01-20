@@ -1,14 +1,15 @@
-﻿@* @model Models.Entities.Order *@
+﻿@model Models.Entities.Order
+@*
 @model Web.Models.OrderViewModel
 @using Models.Data
+*@
 
 @{
 	ViewData["Title"] = "Create";
 	// ViewData["Title"] = "Coffee Shop";
-	var context = ViewBag.Context as LocalDbContext;
+	// var context = ViewBag.Context as LocalDbContext;
 }
 
-@*
 <h1>Create</h1>
 
 <h4>Order</h4>
@@ -46,8 +47,15 @@
 <div>
 	<a asp-action="Index">Back to List</a>
 </div>
-*@
 
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}
+
+
+@*
 <div class="container py-4">
 
 	<!-- HEADER -->
@@ -105,7 +113,7 @@
 
 				<div class="col-6 col-md-4 col-lg-4">
 					<div class="product-card h-100 js-product-card" data-product-id="@p.Id">
-						@* <img src="@p.ImageUrl" alt="@p.Name" class="product-image" /> *@
+						<img src="@p.ImageUrl" alt="@p.Name" class="product-image" />
 
 						<div class="p-3">
 							<div class="d-flex justify-content-between align-items-start">
@@ -303,3 +311,4 @@
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
 }
+*@
