@@ -20,7 +20,7 @@ public class Order : BaseEntity {
 	[Key]
 	[Display(Name = "OrderId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>

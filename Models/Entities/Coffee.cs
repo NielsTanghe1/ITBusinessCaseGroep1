@@ -21,7 +21,7 @@ public class Coffee : BaseEntity {
 	[Key]
 	[Display(Name = "CoffeeId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>

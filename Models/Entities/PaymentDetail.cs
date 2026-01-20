@@ -22,7 +22,7 @@ public class PaymentDetail : BaseEntity {
 	[Key]
 	[Display(Name = "PaymentDetailsId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>
@@ -45,9 +45,10 @@ public class PaymentDetail : BaseEntity {
 	/// <summary>
 	/// Gets or sets the last four digits of the bank account.
 	/// </summary>
-	[Range(4, 4)]
+	[StringLength(4, MinimumLength = 4)]
+	[RegularExpression(@"^\d{4}$")]
 	[Display(Name = "LastFour")]
-	public required int LastFour {
+	public required string LastFour {
 		get; set;
 	}
 
@@ -67,7 +68,7 @@ public class PaymentDetail : BaseEntity {
 	/// <remarks>
 	/// Something which would be implemented using a service like Stripe, PayPal, Payconiq, ...
 	/// </remarks>
-	[Range(40, 255)]
+	[StringLength(255, MinimumLength = 40)]
 	[Display(Name = "GatewayToken")]
 	public required string GatewayToken {
 		get; set;
@@ -89,85 +90,85 @@ public class PaymentDetail : BaseEntity {
 		return [
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 8530,
+				LastFour = "8530",
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 6394,
+				LastFour = "6394",
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 2303,
+				LastFour = "2303",
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 7863,
+				LastFour = "7863",
 				ExpiryDate = DateTime.UtcNow.AddYears(5),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 0975,
+				LastFour = "0975",
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 1212,
+				LastFour = "1212",
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 3465,
+				LastFour = "3465",
 				ExpiryDate = DateTime.UtcNow.AddYears(1),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 7893,
+				LastFour = "7893",
 				ExpiryDate = DateTime.UtcNow.AddYears(1),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 4234,
+				LastFour = "4234",
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 4895,
+				LastFour = "4895",
 				ExpiryDate = DateTime.UtcNow.AddYears(5),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 0976,
+				LastFour = "0976",
 				ExpiryDate = DateTime.UtcNow.AddYears(2),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 0303,
+				LastFour = "0303",
 				ExpiryDate = DateTime.UtcNow.AddYears(3),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 1214,
+				LastFour = "1214",
 				ExpiryDate = DateTime.UtcNow.AddYears(3),
 				GatewayToken = new Guid().ToString()
 			},
 			new() {
 				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
-				LastFour = 5665,
+				LastFour = "5665",
 				ExpiryDate = DateTime.UtcNow.AddYears(4),
 				GatewayToken = new Guid().ToString()
 			}

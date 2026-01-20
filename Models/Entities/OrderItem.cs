@@ -21,7 +21,7 @@ public class OrderItem : BaseEntity {
 	[Key]
 	[Display(Name = "OrderItemId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>

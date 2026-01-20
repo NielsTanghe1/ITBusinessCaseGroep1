@@ -21,7 +21,7 @@ public class Address : BaseEntity {
 	[Key]
 	[Display(Name = "AddressId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>
