@@ -48,7 +48,7 @@ public class Coffee : BaseEntity {
 	/// </remarks>
 	[DataType(DataType.Currency)]
 	[Column(TypeName = "decimal(18, 2)")]
-	[Range(typeof(decimal), "0.00", "50.00")]
+	[Range(0.00, 50.00)]
 	[Display(Name = "Price")]
 	public required decimal Price {
 		get; set;

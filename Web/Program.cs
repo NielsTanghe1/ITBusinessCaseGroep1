@@ -5,6 +5,8 @@ using Models.Data;
 using Models.Entities;
 using Web.Consumers;
 using Web.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
@@ -91,7 +93,17 @@ builder.Services.AddMassTransit(x => {
 	});
 });
 
+// ... inside builder section
+var supportedCultures = new[] { "nl-BE", "fr-BE", "en-US" };
+var localizationOptions = new RequestLocalizationOptions()
+	 .SetDefaultCulture("nl-BE") // Forces Euro and comma by default
+	 .AddSupportedCultures(supportedCultures)
+	 .AddSupportedUICultures(supportedCultures);
+
 var app = builder.Build();
+
+// Change this for regional UnitPrice customisation
+//app.UseRequestLocalization(localizationOptions);
 
 // Populate the local database with data
 using (var scope = app.Services.CreateScope()) {
