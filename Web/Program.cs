@@ -1,10 +1,10 @@
-using Web.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
 using Web.Consumers;
+using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);

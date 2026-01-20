@@ -1,7 +1,5 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
 using Models.Entities.DTO;
@@ -50,7 +48,9 @@ public class OrdersController : Controller {
 		//return View(order);
 
 		bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long userId);
-		Order newOrder = new() { CoffeeUserId = userId };
+		Order newOrder = new() {
+			CoffeeUserId = userId
+		};
 		order.Items ??= new List<OrderItem>();
 
 		// Minstens 1 product gekozen (qty > 0)
