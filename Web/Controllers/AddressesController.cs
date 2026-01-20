@@ -3,14 +3,18 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.Enums;
+using Web.Services;
 
 namespace Web.Controllers;
 
 public class AddressesController : Controller {
 	private readonly LocalDbContext _context;
+	private readonly Utilities _utilities;
 
-	public AddressesController(LocalDbContext context) {
+	public AddressesController(LocalDbContext context, Utilities utilities) {
 		_context = context;
+		_utilities = utilities;
 	}
 
 	// GET: Addresses
@@ -38,6 +42,7 @@ public class AddressesController : Controller {
 	// GET: Addresses/Create
 	public IActionResult Create() {
 		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+		ViewData["AddressTypes"] = _utilities.GetEnumSelectList<AddressType>(ignored: ["Unknown"]);
 		return View();
 	}
 
@@ -67,6 +72,7 @@ public class AddressesController : Controller {
 			return NotFound();
 		}
 		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", address.CoffeeUserId);
+		ViewData["AddressTypes"] = _utilities.GetEnumSelectList<AddressType>(ignored: ["Unknown"]);
 		return View(address);
 	}
 

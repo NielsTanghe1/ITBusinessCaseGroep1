@@ -2,14 +2,18 @@
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.Enums;
+using Web.Services;
 
 namespace Web.Controllers;
 
 public class CoffeesController : Controller {
 	private readonly LocalDbContext _context;
+	private readonly Utilities _utilities;
 
-	public CoffeesController(LocalDbContext context) {
+	public CoffeesController(LocalDbContext context, Utilities utilities) {
 		_context = context;
+		_utilities = utilities;
 	}
 
 	// GET: Coffees
@@ -34,6 +38,8 @@ public class CoffeesController : Controller {
 
 	// GET: Coffees/Create
 	public IActionResult Create() {
+		ViewData["CoffeeNames"] = _utilities.GetEnumSelectList<CoffeeName>(ignored: ["Unknown"]);
+		ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
 		return View();
 	}
 
@@ -61,6 +67,8 @@ public class CoffeesController : Controller {
 		if (coffee == null) {
 			return NotFound();
 		}
+		ViewData["CoffeeNames"] = _utilities.GetEnumSelectList<CoffeeName>(ignored: ["Unknown"]);
+		ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
 		return View(coffee);
 	}
 

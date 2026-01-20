@@ -4,15 +4,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.Enums;
+using Web.Services;
 
 namespace Web.Controllers;
 
 public class OrdersController : Controller {
 	private readonly LocalDbContext _context;
+	private readonly Utilities _utilities;
 	private readonly IPublishEndpoint _publish;
 
-	public OrdersController(LocalDbContext context, IPublishEndpoint publish) {
+	public OrdersController(LocalDbContext context, Utilities utilities, IPublishEndpoint publish) {
 		_context = context;
+		_utilities = utilities;
 		_publish = publish;
 	}
 
@@ -41,6 +45,7 @@ public class OrdersController : Controller {
 	// GET: Orders/Create
 	public IActionResult Create() {
 		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 		return View();
 
 		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long id);
@@ -145,6 +150,7 @@ public class OrdersController : Controller {
 			return NotFound();
 		}
 		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 		return View(order);
 	}
 
