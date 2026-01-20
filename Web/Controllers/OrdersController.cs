@@ -65,7 +65,7 @@ public class OrdersController : Controller {
 						OrderId = newOrder.Id,
 						CoffeeId = coffee.Id,
 						Quantity = 0,
-						PriceAtPurchase = coffee.Price
+						UnitPrice = coffee.Price
 					})
 					.ToList();
 			}

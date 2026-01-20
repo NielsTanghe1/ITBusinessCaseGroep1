@@ -21,7 +21,7 @@ public class OrderViewModel {
 	public decimal TotalPrice {
 		get {
 			decimal total = 0;
-			Items.ForEach(item => total += item.PriceAtPurchase);
+			Items.ForEach(item => total += item.UnitPrice);
 			return total;
 		}
 	}
