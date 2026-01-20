@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Web.Contracts;
+using Models.Entities.DTO;
 
 namespace Web.Consumers;
 
@@ -8,7 +8,7 @@ public class OrderSubmittedConsumer : IConsumer<OrderSubmitted> {
 		var m = context.Message;
 
 		Console.WriteLine($"[ORDER] {m.FirstName} {m.LastName} - {m.Email} - Total €{m.Total:0.00}");
-		Console.WriteLine($"Adres: {m.Street}, {m.Postcode} {m.City}, {m.Country} (Postbus: {m.Postbus})");
+		Console.WriteLine($"Adres: {m.Street}, {m.PostalCode} {m.City}, {m.CountryISO} (Postbus: {m.HouseNumber})");
 
 		if (m.Lines is null || m.Lines.Count == 0) {
 			Console.WriteLine("  (Geen order lines ontvangen)");

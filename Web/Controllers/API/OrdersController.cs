@@ -1,24 +1,23 @@
 ﻿using MassTransit;
-using Web.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Models.Entities.DTO;
 
-namespace Web.Controllers;
+namespace Web.Controllers.API;
 
 [ApiController]
-
 [Route("api/[controller]")]
-public class OrderController : ControllerBase {
+public class OrdersController : ControllerBase {
 	private readonly IPublishEndpoint _publishEndpoint;
 
-	public OrderController(IPublishEndpoint publishEndpoint) {
+	public OrdersController(IPublishEndpoint publishEndpoint) {
 		_publishEndpoint = publishEndpoint;
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request) {
+	public async Task<IActionResult> CreateOrder([FromBody] OrderCreated request) {
 		// Map the request to the full OrderCreated contract
 		var message = new OrderCreated(
-			 Guid.NewGuid(),
+			 Guid.NewGuid().ToString(),
 			 request.ProductName,
 			 request.ProductType,
 			 request.Price,
@@ -40,11 +39,3 @@ public class OrderController : ControllerBase {
 		return Accepted();
 	}
 }
-
-// Request DTO matching the architecture tables
-public record CreateOrderRequest(
-	 string ProductName, string ProductType, decimal Price, int Quantity,
-	 string FirstName, string LastName, string Email,
-	 int Postcode, string City, string Street, string Postbus, string Country,
-	 string Cardnumber, int CVV
-);

@@ -1,3 +1,4 @@
+using Web.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,9 @@ builder.Services
 
 // MVC
 builder.Services.AddControllersWithViews();
+
+// Utilities
+builder.Services.AddTransient<Utilities>();
 
 builder.Services.AddRazorPages();
 
@@ -125,6 +129,7 @@ using (var scope = app.Services.CreateScope()) {
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
 	app.UseExceptionHandler("/Home/Error");
+	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 }
 

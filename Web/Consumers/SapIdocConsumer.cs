@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Web.Contracts;
+using Models.Entities.DTO;
 
 namespace Web.Consumers;
 
