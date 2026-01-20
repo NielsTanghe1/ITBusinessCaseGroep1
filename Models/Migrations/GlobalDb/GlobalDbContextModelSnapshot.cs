@@ -8,10 +8,10 @@ using Models.Data;
 
 #nullable disable
 
-namespace Models.Migrations
+namespace Models.Migrations.GlobalDb
 {
-    [DbContext(typeof(LocalDbContext))]
-    partial class LocalDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(GlobalDbContext))]
+    partial class GlobalDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
