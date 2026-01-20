@@ -58,10 +58,7 @@ builder.Services.AddRazorPages();
 // MASS TRANSIT + RABBITMQ
 // =======================
 builder.Services.AddMassTransit(x => {
-	x.AddConsumer<SalesforceConsumer>();
-	x.AddConsumer<SapIdocConsumer>();
-	x.AddConsumer<OrderCreatedConsumer>();
-	x.AddConsumer<OrderSubmittedConsumer>();
+
 
 	x.UsingRabbitMq((context, cfg) => {
 		var rabbit = builder.Configuration.GetSection("RabbitMQConfig");
@@ -90,23 +87,7 @@ builder.Services.AddMassTransit(x => {
 			}
 		});
 
-		// Prep queues in RabbitMQ:
-		cfg.ReceiveEndpoint("order-queue", e => {
-			e.ConfigureConsumer<OrderCreatedConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-
-		cfg.ReceiveEndpoint("salesforce-queue", e => {
-			e.ConfigureConsumer<SalesforceConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-
-		cfg.ReceiveEndpoint("sapidoc-queue", e => {
-			e.ConfigureConsumer<SapIdocConsumer>(context);
-			e.ConcurrentMessageLimit = 4;
-		});
-
-		cfg.ConfigureEndpoints(context);
+		
 	});
 });
 
