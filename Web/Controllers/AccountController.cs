@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Data;
+using Models.Entities;
 
 namespace Web.Controllers;
 
 public class AccountController : Controller {
-	private readonly UserManager<IdentityUser> _userManager;
-	private readonly SignInManager<IdentityUser> _signInManager;
+	private readonly UserManager<CoffeeUser> _userManager;
+	private readonly SignInManager<CoffeeUser> _signInManager;
 	private readonly LocalDbContext _context;
 
 	public AccountController(
-		 UserManager<IdentityUser> userManager,
-		 SignInManager<IdentityUser> signInManager,
+		 UserManager<CoffeeUser> userManager,
+		 SignInManager<CoffeeUser> signInManager,
 		 LocalDbContext context) {
 		_userManager = userManager;
 		_signInManager = signInManager;
@@ -43,9 +44,12 @@ public class AccountController : Controller {
 
 		if (!ModelState.IsValid)
 			return View("LoginRegister", model);
-
+		var user = await _userManager.FindByEmailAsync(model.LoginEmail);
+		if (user == null) {
+			return View("LoginRegister", model);
+		}
 		var result = await _signInManager.PasswordSignInAsync(
-			 model.LoginEmail!,
+			 user,
 			 model.LoginPassword!,
 			 isPersistent: false,
 			 lockoutOnFailure: false);

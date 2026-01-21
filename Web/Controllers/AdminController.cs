@@ -5,18 +5,19 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities.DTO;
+using Models.Entities;
 
 namespace Web.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller {
-	private readonly UserManager<IdentityUser> _userManager;
-	private readonly RoleManager<IdentityRole> _roleManager;
+	private readonly UserManager<CoffeeUser> _userManager;
+	private readonly RoleManager<IdentityRole<long>> _roleManager;
 	private readonly LocalDbContext _db;
 
 	public AdminController(
-		 UserManager<IdentityUser> userManager,
-		 RoleManager<IdentityRole> roleManager,
+		 UserManager<CoffeeUser> userManager,
+		 RoleManager<IdentityRole<long>> roleManager,
 		 LocalDbContext db) {
 		_userManager = userManager;
 		_roleManager = roleManager;
@@ -34,7 +35,7 @@ public class AdminController : Controller {
 			 .OrderBy(u => u.Email)
 			 .ToListAsync();
 
-		var vm = new List<(IdentityUser user, IList<string> roles)>();
+		var vm = new List<(CoffeeUser user, IList<string> roles)>();
 		foreach (var u in users)
 			vm.Add((u, await _userManager.GetRolesAsync(u)));
 
@@ -49,7 +50,9 @@ public class AdminController : Controller {
 		if (!ModelState.IsValid)
 			return View(model);
 
-		var user = new IdentityUser {
+		var user = new CoffeeUser {
+			FirstName = model.FirstName,
+			LastName = model.LastName,
 			UserName = model.Email,
 			Email = model.Email,
 			EmailConfirmed = true
@@ -64,7 +67,7 @@ public class AdminController : Controller {
 
 		if (!string.IsNullOrWhiteSpace(model.Role)) {
 			if (!await _roleManager.RoleExistsAsync(model.Role))
-				await _roleManager.CreateAsync(new IdentityRole(model.Role));
+				await _roleManager.CreateAsync(new IdentityRole<long>(model.Role));
 
 			await _userManager.AddToRoleAsync(user, model.Role);
 		}
@@ -92,7 +95,7 @@ public class AdminController : Controller {
 	[HttpPost]
 	public async Task<IActionResult> CreateRole(string roleName) {
 		if (!string.IsNullOrWhiteSpace(roleName) && !await _roleManager.RoleExistsAsync(roleName))
-			await _roleManager.CreateAsync(new IdentityRole(roleName));
+			await _roleManager.CreateAsync(new IdentityRole<long>(roleName));
 
 		return RedirectToAction(nameof(Roles));
 	}
@@ -102,7 +105,7 @@ public class AdminController : Controller {
 		var user = await _userManager.FindByIdAsync(userId);
 		if (user != null) {
 			if (!await _roleManager.RoleExistsAsync(roleName))
-				await _roleManager.CreateAsync(new IdentityRole(roleName));
+				await _roleManager.CreateAsync(new IdentityRole<long>(roleName));
 
 			await _userManager.AddToRoleAsync(user, roleName);
 		}
@@ -186,6 +189,8 @@ public class AdminController : Controller {
 }
 
 public class CreateUserViewModel {
+	public string FirstName { get; set; } = "";
+	public string LastName { get; set; } = "";
 	public string Email { get; set; } = "";
 	public string Password { get; set; } = "";
 	public string? Role {

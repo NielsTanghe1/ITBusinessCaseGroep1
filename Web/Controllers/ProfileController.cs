@@ -4,15 +4,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
+using Models.Entities;
 
 namespace Web.Controllers;
 
 [Authorize]
 public class ProfileController : Controller {
 	private readonly LocalDbContext _db;
-	private readonly UserManager<IdentityUser> _userManager;
+	private readonly UserManager<CoffeeUser> _userManager;
 
-	public ProfileController(LocalDbContext db, UserManager<IdentityUser> userManager) {
+	public ProfileController(LocalDbContext db, UserManager<CoffeeUser> userManager) {
 		_db = db;
 		_userManager = userManager;
 	}
