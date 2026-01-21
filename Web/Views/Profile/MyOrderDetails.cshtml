@@ -1,4 +1,4 @@
-﻿@model Web.Models.Order
+﻿@model Models.Entities.Order
 @{
     ViewData["Title"] = "Bestelling details";
 }
@@ -9,14 +9,14 @@
 
 <div class="card">
     <div class="card-body">
-        <div><strong>OrderId:</strong> @Model.OrderId</div>
+        <div><strong>OrderId:</strong> @Model.Id</div>
         <div><strong>Status:</strong> @Model.Status</div>
-        <div><strong>Datum:</strong> @Model.CreatedAtUtc</div>
-        <div><strong>Email:</strong> @Model.CustomerEmail</div>
-        <div><strong>Klant:</strong> @Model.CustomerName</div>
+        <div><strong>Datum:</strong> @Model.CreatedAt</div>
+        <div><strong>Email:</strong> @Model.CoffeeUser.Email</div>
+        <div><strong>Klant:</strong> @Model.CoffeeUser.FirstName</div>
 
-        <hr />
+        @* <hr />
         <h5>Raw JSON</h5>
-        <pre style="white-space: pre-wrap; word-break: break-word;">@Model.PayloadJson</pre>
+        <pre style="white-space: pre-wrap; word-break: break-word;">@Model.PayloadJson</pre> *@
     </div>
 </div>

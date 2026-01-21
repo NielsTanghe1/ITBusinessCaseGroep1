@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
-using Web.Consumers;
 using Web.Services;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
@@ -63,8 +62,6 @@ builder.Services.AddRazorPages();
 // MASS TRANSIT + RABBITMQ
 // =======================
 builder.Services.AddMassTransit(x => {
-
-
 	x.UsingRabbitMq((context, cfg) => {
 		var rabbit = builder.Configuration.GetSection("RabbitMQConfig");
 
@@ -91,8 +88,6 @@ builder.Services.AddMassTransit(x => {
 				h.Password(password);
 			}
 		});
-
-		
 	});
 });
 

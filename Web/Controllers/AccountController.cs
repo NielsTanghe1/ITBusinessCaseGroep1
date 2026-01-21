@@ -1,122 +1,116 @@
-﻿using Web.Data;
-using Web.Models;
+﻿using Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Models.Data;
 
 namespace Web.Controllers;
 
-public class AccountController : Controller
-{
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly ApplicationDbContext _context;
+public class AccountController : Controller {
+	private readonly UserManager<IdentityUser> _userManager;
+	private readonly SignInManager<IdentityUser> _signInManager;
+	private readonly LocalDbContext _context;
 
-    public AccountController(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
-        ApplicationDbContext context)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _context = context;
-    }
+	public AccountController(
+		 UserManager<IdentityUser> userManager,
+		 SignInManager<IdentityUser> signInManager,
+		 LocalDbContext context) {
+		_userManager = userManager;
+		_signInManager = signInManager;
+		_context = context;
+	}
 
-    [AllowAnonymous]
-    [HttpGet]
-    public IActionResult LoginRegister()
-    {
-        return View(new LoginRegisterViewModel());
-    }
+	[AllowAnonymous]
+	[HttpGet]
+	public IActionResult LoginRegister() {
+		return View(new LoginRegisterViewModel());
+	}
 
-    [AllowAnonymous]
-    [HttpPost]
-    public async Task<IActionResult> Login(LoginRegisterViewModel model)
-    {
-        // Alleen login velden relevant
-        ModelState.Remove(nameof(LoginRegisterViewModel.RegisterEmail));
-        ModelState.Remove(nameof(LoginRegisterViewModel.RegisterPassword));
-        ModelState.Remove(nameof(LoginRegisterViewModel.ConfirmPassword));
-        ModelState.Remove(nameof(LoginRegisterViewModel.FirstName));
-        ModelState.Remove(nameof(LoginRegisterViewModel.LastName));
-        ModelState.Remove(nameof(LoginRegisterViewModel.Street));
-        ModelState.Remove(nameof(LoginRegisterViewModel.Postbus));
-        ModelState.Remove(nameof(LoginRegisterViewModel.City));
-        ModelState.Remove(nameof(LoginRegisterViewModel.Postcode));
-        ModelState.Remove(nameof(LoginRegisterViewModel.Country));
+	[AllowAnonymous]
+	[HttpPost]
+	public async Task<IActionResult> Login(LoginRegisterViewModel model) {
+		// Alleen login velden relevant
+		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterEmail));
+		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterPassword));
+		ModelState.Remove(nameof(LoginRegisterViewModel.ConfirmPassword));
+		ModelState.Remove(nameof(LoginRegisterViewModel.FirstName));
+		ModelState.Remove(nameof(LoginRegisterViewModel.LastName));
+		ModelState.Remove(nameof(LoginRegisterViewModel.Street));
+		ModelState.Remove(nameof(LoginRegisterViewModel.Postbus));
+		ModelState.Remove(nameof(LoginRegisterViewModel.City));
+		ModelState.Remove(nameof(LoginRegisterViewModel.Postcode));
+		ModelState.Remove(nameof(LoginRegisterViewModel.Country));
 
-        if (!ModelState.IsValid)
-            return View("LoginRegister", model);
+		if (!ModelState.IsValid)
+			return View("LoginRegister", model);
 
-        var result = await _signInManager.PasswordSignInAsync(
-            model.LoginEmail!,
-            model.LoginPassword!,
-            isPersistent: false,
-            lockoutOnFailure: false);
+		var result = await _signInManager.PasswordSignInAsync(
+			 model.LoginEmail!,
+			 model.LoginPassword!,
+			 isPersistent: false,
+			 lockoutOnFailure: false);
 
-        if (result.Succeeded)
-            return RedirectToAction("Index", "Home");
+		if (result.Succeeded)
+			return RedirectToAction("Index", "Home");
 
-        ModelState.AddModelError("", "Login mislukt. Controleer je email en wachtwoord.");
-        return View("LoginRegister", model);
-    }
+		ModelState.AddModelError("", "Login mislukt. Controleer je email en wachtwoord.");
+		return View("LoginRegister", model);
+	}
 
-    [AllowAnonymous]
-    [HttpPost]
-    public async Task<IActionResult> Register(LoginRegisterViewModel model)
-    {
-        // Alleen register velden relevant
-        ModelState.Remove(nameof(LoginRegisterViewModel.LoginEmail));
-        ModelState.Remove(nameof(LoginRegisterViewModel.LoginPassword));
+	[AllowAnonymous]
+	[HttpPost]
+	public async Task<IActionResult> Register(LoginRegisterViewModel model) {
+		//// Alleen register velden relevant
+		//ModelState.Remove(nameof(LoginRegisterViewModel.LoginEmail));
+		//ModelState.Remove(nameof(LoginRegisterViewModel.LoginPassword));
 
-        if (!ModelState.IsValid)
-            return View("LoginRegister", model);
+		//if (!ModelState.IsValid)
+		//    return View("LoginRegister", model);
 
-        var user = new IdentityUser
-        {
-            UserName = model.RegisterEmail,
-            Email = model.RegisterEmail
-        };
+		//var user = new IdentityUser
+		//{
+		//    UserName = model.RegisterEmail,
+		//    Email = model.RegisterEmail
+		//};
 
-        var result = await _userManager.CreateAsync(user, model.RegisterPassword!);
+		//var result = await _userManager.CreateAsync(user, model.RegisterPassword!);
 
-        if (!result.Succeeded)
-        {
-            foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+		//if (!result.Succeeded)
+		//{
+		//    foreach (var error in result.Errors)
+		//        ModelState.AddModelError("", error.Description);
 
-            return View("LoginRegister", model);
-        }
+		//    return View("LoginRegister", model);
+		//}
 
-        // ✅ Profiel opslaan (prefill checkout)
-        var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
-        if (profile == null)
-        {
-            profile = new UserProfile { UserId = user.Id };
-            _context.UserProfiles.Add(profile);
-        }
+		//// ✅ Profiel opslaan (prefill checkout)
+		//var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+		//if (profile == null)
+		//{
+		//    profile = new UserProfile { UserId = user.Id };
+		//    _context.UserProfiles.Add(profile);
+		//}
 
-        profile.Email = model.RegisterEmail ?? "";
-        profile.FirstName = model.FirstName ?? "";
-        profile.LastName = model.LastName ?? "";
-        profile.Street = model.Street ?? "";
-        profile.Postbus = model.Postbus ?? "";
-        profile.City = model.City ?? "";
-        profile.Postcode = model.Postcode ?? "";
-        profile.Country = model.Country ?? "";
+		//profile.Email = model.RegisterEmail ?? "";
+		//profile.FirstName = model.FirstName ?? "";
+		//profile.LastName = model.LastName ?? "";
+		//profile.Street = model.Street ?? "";
+		//profile.Postbus = model.Postbus ?? "";
+		//profile.City = model.City ?? "";
+		//profile.Postcode = model.Postcode ?? "";
+		//profile.Country = model.Country ?? "";
 
-        await _context.SaveChangesAsync();
+		//await _context.SaveChangesAsync();
 
-        await _signInManager.SignInAsync(user, isPersistent: false);
-        return RedirectToAction("Index", "Home");
-    }
+		//await _signInManager.SignInAsync(user, isPersistent: false);
+		//return RedirectToAction("Index", "Home");
+		return Ok();
+	}
 
-    [Authorize]
-    [HttpPost]
-    public async Task<IActionResult> Logout()
-    {
-        await _signInManager.SignOutAsync();
-        return RedirectToAction(nameof(LoginRegister));
-    }
+	[Authorize]
+	[HttpPost]
+	public async Task<IActionResult> Logout() {
+		await _signInManager.SignOutAsync();
+		return RedirectToAction(nameof(LoginRegister));
+	}
 }

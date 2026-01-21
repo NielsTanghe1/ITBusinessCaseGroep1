@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Models.Entities;
 
 namespace Web.Services;
 
@@ -37,5 +38,9 @@ public class Utilities {
 			});
 		}
 		return list;
+	}
+
+	public static decimal GetTotalPrice(OrderItem orderItem) {
+		return (orderItem.Quantity * orderItem.UnitPrice);
 	}
 }
