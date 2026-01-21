@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\DTO\" />
     <Folder Include="Extensions\Mappings\" />
     <Folder Include="Resources\" />
   </ItemGroup>

@@ -385,11 +385,11 @@ namespace Models.Migrations
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal>("PriceAtPurchase")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("Id");
 
@@ -423,10 +423,13 @@ namespace Models.Migrations
 
                     b.Property<string>("GatewayToken")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<int>("LastFour")
-                        .HasColumnType("int");
+                    b.Property<string>("LastFour")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
 
                     b.HasKey("Id");
 

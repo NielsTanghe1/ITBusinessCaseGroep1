@@ -1,14 +1,16 @@
-using Web.Consumers;
-using Web.Data;
 using MassTransit;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Web.Consumers;
+using Web.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
+bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
 
 // =======================
 // DATABASE + IDENTITY (SQLITE)
@@ -49,22 +51,11 @@ builder.Services
 	})
 	.AddEntityFrameworkStores<LocalDbContext>();
 
-// Login redirect
-builder.Services.ConfigureApplicationCookie(options => {
-	options.LoginPath = "/Account/Register";
-	options.AccessDeniedPath = "/Account/Register";
-});
+// MVC
+builder.Services.AddControllersWithViews();
 
-// =======================
-// MVC (LOGIN VERPLICHT)
-// =======================
-builder.Services.AddControllersWithViews(options => {
-	var policy = new AuthorizationPolicyBuilder()
-		 .RequireAuthenticatedUser()
-		 .Build();
-
-	options.Filters.Add(new AuthorizeFilter(policy));
-});
+// Utilities
+builder.Services.AddTransient<Utilities>();
 
 builder.Services.AddRazorPages();
 
@@ -72,24 +63,50 @@ builder.Services.AddRazorPages();
 // MASS TRANSIT + RABBITMQ
 // =======================
 builder.Services.AddMassTransit(x => {
-	// ✅ Consumer registreren
-	x.AddConsumer<OrderSubmittedConsumer>();
 
-	// ✅ RabbitMQ configuratie
+
 	x.UsingRabbitMq((context, cfg) => {
-		cfg.Host("10.2.160.222", 5672, "/", h => {
-			h.Username("admin");
-			h.Password("curler-squishy-monogamy");
+		var rabbit = builder.Configuration.GetSection("RabbitMQConfig");
+
+		var scheme = isDebugging ? "rabbitmq" : rabbit["Scheme"];
+		var host = rabbit["Host"] ?? "localhost";
+		var vhost = rabbit["VirtualHost"] ?? "/";
+		var port = rabbit.GetValue<int?>("Port:Cluster") ?? 5672;
+		var username = rabbit["Username"] ?? "guest";
+		var password = rabbit["Password"] ?? "guest";
+
+		// Build URI: vhost "/" -> no path, otherwise "/<vhost>"
+		var vhostPath = (string.IsNullOrWhiteSpace(vhost) || vhost == "/")
+			? string.Empty
+			: "/" + vhost.TrimStart('/');
+
+		var uri = new Uri($"{scheme}://{host}:{port}{vhostPath}");
+
+		cfg.Host(uri, h => {
+			if (isDebugging && isDebuggingResult) {
+				h.Username("guest");
+				h.Password("guest");
+			} else {
+				h.Username(username);
+				h.Password(password);
+			}
 		});
 
-		// ✅ Automatisch exchanges, queues & bindings
-		cfg.ReceiveEndpoint("OrderSubmitted", e => {
-			e.ConfigureConsumer<OrderSubmittedConsumer>(context);
-		});
+		
 	});
 });
 
+// ... inside builder section
+var supportedCultures = new[] { "nl-BE", "fr-BE", "en-US" };
+var localizationOptions = new RequestLocalizationOptions()
+	 .SetDefaultCulture("nl-BE") // Forces Euro and comma by default
+	 .AddSupportedCultures(supportedCultures)
+	 .AddSupportedUICultures(supportedCultures);
+
 var app = builder.Build();
+
+// Change this for regional UnitPrice customisation
+//app.UseRequestLocalization(localizationOptions);
 
 // Populate the local database with data
 using (var scope = app.Services.CreateScope()) {
@@ -112,9 +129,13 @@ if (!app.Environment.IsDevelopment()) {
 	app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseRouting();
+// ✅ Nodig voor wwwroot/images/css/js
+app.UseStaticFiles();
 
+// Als je enkel HTTP gebruikt, laat deze uit
+// app.UseHttpsRedirection();
+
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();

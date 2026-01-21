@@ -21,7 +21,7 @@ public class OrderItem : BaseEntity {
 	[Key]
 	[Display(Name = "OrderItemId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>
@@ -68,16 +68,16 @@ public class OrderItem : BaseEntity {
 	}
 
 	/// <summary>
-	/// Gets or sets the price of the total amount of <see cref="Coffee"/> at the time of purchase.
+	/// Gets or sets the price of the associated <see cref="Coffee"/> entity.
 	/// </summary>
 	/// <remarks>
-	/// Has a range limit between 0 and 150000.00 but is allowed to contain a total of 18 digits.
+	/// Has a range limit between 0 and 50.00 but is allowed to contain a total of 18 digits.
 	/// </remarks>
 	[DataType(DataType.Currency)]
 	[Column(TypeName = "decimal(18, 2)")]
-	[Range(typeof(decimal), "0.00", "150000.00")]
-	[Display(Name = "PriceAtPurchase")]
-	public required decimal PriceAtPurchase {
+	[Range(0.00, 50.00)] // Use double literals here
+	[Display(Name = "UnitPrice")]
+	public required decimal UnitPrice {
 		get; set;
 	}
 
@@ -108,7 +108,7 @@ public class OrderItem : BaseEntity {
 				OrderId = orderIds[i],
 				CoffeeId = coffee.Key,
 				Quantity = quantity,
-				PriceAtPurchase = Math.Round(
+				UnitPrice = Math.Round(
 					(decimal) (coffee.Value * quantity),
 					2
 				 )

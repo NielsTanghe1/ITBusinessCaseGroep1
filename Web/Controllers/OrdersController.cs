@@ -1,176 +1,216 @@
-﻿using Web.Contracts;
-using Web.Data;
-using Web.Models;
-using MassTransit;
-using Microsoft.AspNetCore.Authorization;
+﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using Models.Data;
+using Models.Entities;
+using Models.Entities.Enums;
+using Web.Services;
 
 namespace Web.Controllers;
 
-[Authorize]
-public class OrdersController : Controller
-{
-    private readonly IPublishEndpoint _publish;
-    private readonly ApplicationDbContext _context;
+public class OrdersController : Controller {
+	private readonly LocalDbContext _context;
+	private readonly Utilities _utilities;
+	private readonly IPublishEndpoint _publish;
 
-    public OrdersController(IPublishEndpoint publish, ApplicationDbContext context)
-    {
-        _publish = publish;
-        _context = context;
-    }
+	public OrdersController(LocalDbContext context, Utilities utilities, IPublishEndpoint publish) {
+		_context = context;
+		_utilities = utilities;
+		_publish = publish;
+	}
 
-    [HttpGet]
-    public async Task<IActionResult> Create()
-    {
-        var vm = new PlaceOrderViewModel
-        {
-            Items = BeanCatalog.Beans
-                .Select(b => new BeanOrderItemInput
-                {
-                    BeanId = b.Id,
-                    RoastedKg = 0,
-                    GroundKg = 0,
-                    RawKg = 0
-                })
-                .ToList()
-        };
+	// GET: Orders
+	public async Task<IActionResult> Index() {
+		var localDbContext = _context.Orders.Include(o => o.CoffeeUser);
+		return View(await localDbContext.ToListAsync());
+	}
 
-        // ✅ Geen UserManager => geen Identity EF query => geen "u.Id" SQLite error
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+	// GET: Orders/Details/5
+	public async Task<IActionResult> Details(long? id) {
+		if (id == null) {
+			return NotFound();
+		}
 
-        if (!string.IsNullOrWhiteSpace(userId))
-        {
-            var profile = await _context.UserProfiles
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.UserId == userId);
+		var order = await _context.Orders
+			 .Include(o => o.CoffeeUser)
+			 .FirstOrDefaultAsync(m => m.Id == id);
+		if (order == null) {
+			return NotFound();
+		}
 
-            if (profile != null)
-            {
-                vm.FirstName = profile.FirstName;
-                vm.LastName = profile.LastName;
-                vm.Email = profile.Email;
-                vm.Street = profile.Street;
-                vm.Postbus = profile.Postbus;
-                vm.City = profile.City;
-                vm.Postcode = profile.Postcode;
-                vm.Country = profile.Country;
-            }
-            else
-            {
-                vm.Email = User.Identity?.Name ?? "";
-            }
-        }
+		return View(order);
+	}
 
-        return View(vm);
-    }
+	// GET: Orders/Create
+	public IActionResult Create() {
+		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
+		return View();
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(PlaceOrderViewModel model)
-    {
-        model.Items ??= new List<BeanOrderItemInput>();
+		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long id);
+		//if (parseResult) {
+		//	return View(new OrderViewModel {
+		//		CoffeeUser = _context.Users.Find(id),
+		//		Address = _context.Addresses.Find(id)
+		//	});
+		//}
+		//return View();
+	}
 
-        if (!model.Items.Any(i => i.RoastedKg > 0 || i.GroundKg > 0 || i.RawKg > 0))
-            ModelState.AddModelError("", "Kies minstens één producttype en zet KG groter dan 0.");
+	// POST: Orders/Create
+	// To protect from overposting attacks, enable the specific properties you want to bind to.
+	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Create([Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] Order order) {
+		if (ModelState.IsValid) {
+			_context.Add(order);
+			await _context.SaveChangesAsync();
+			return RedirectToAction(nameof(Index));
+		}
+		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		return View(order);
 
-        if (!ModelState.IsValid)
-        {
-            // Zorg dat items niet verdwijnen als model invalid is
-            if (model.Items.Count == 0)
-            {
-                model.Items = BeanCatalog.Beans
-                    .Select(b => new BeanOrderItemInput
-                    {
-                        BeanId = b.Id,
-                        RoastedKg = 0,
-                        GroundKg = 0,
-                        RawKg = 0
-                    })
-                    .ToList();
-            }
+		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long userId);
+		//Order newOrder = new() {
+		//	CoffeeUserId = userId
+		//};
+		//order.Items ??= new List<OrderItem>();
 
-            return View(model);
-        }
+		//// Minstens 1 product gekozen (qty > 0)
+		//if (!order.Items.Any(i => i.Quantity > 0))
+		//	ModelState.AddModelError("", "Kies minstens één product en zet het aantal groter dan 0.");
 
-        var beansById = BeanCatalog.Beans.ToDictionary(b => b.Id, b => b);
-        var lines = new List<OrderLine>();
+		//if (!ModelState.IsValid) {
+		//	// Zorg dat alle items er blijven instaan (voor de view)
+		//	if (order.Items.Count == 0) {
+		//		order.Items = _context.Coffees
+		//			.Select(coffee => new OrderItem {
+		//				OrderId = newOrder.Id,
+		//				CoffeeId = coffee.Id,
+		//				Quantity = 0,
+		//				UnitPrice = coffee.Price
+		//			})
+		//			.ToList();
+		//	}
+		//	return View(order);
+		//}
 
-        foreach (var item in model.Items)
-        {
-            if (!beansById.TryGetValue(item.BeanId, out var bean))
-                throw new Exception($"Onbekende beanId: {item.BeanId}");
+		//var catalogById = _context.Coffees.ToDictionary(x => x.Id, x => x);
 
-            void AddLine(string type, int kg)
-            {
-                if (kg <= 0) return;
+		//var lines = order.Items
+		//	 .Where(i => i.Quantity > 0)
+		//	 .Select(i => {
+		//		 if (!catalogById.TryGetValue(i.CoffeeId, out var product))
+		//			 throw new Exception($"Onbekend product: {i.CoffeeId}");
 
-                var unit = BeanCatalog.GetPricePerKg(type, bean.Id);
-                var lineTotal = unit * kg;
+		//		 var qty = i.Quantity;
+		//		 var lineTotal = product.Price * qty;
 
-                lines.Add(new OrderLine(
-                    BeanId: bean.Id,
-                    BeanName: bean.Name,
-                    ProductType: type,
-                    Kg: kg,
-                    UnitPricePerKg: unit,
-                    LineTotal: lineTotal
-                ));
-            }
+		//		 return new OrderLine(Guid.NewGuid().ToString(), product.Id, product.Name.ToString(), product.Price, qty, lineTotal);
+		//	 })
+		//	 .ToList();
 
-            AddLine("Roasted", item.RoastedKg);
-            AddLine("Ground", item.GroundKg);
-            AddLine("Raw", item.RawKg);
-        }
+		//var total = lines.Sum(l => l.LineTotal);
+		//var address = _context.Addresses.First(addr => addr.CoffeeUserId == order.CoffeeUser.Id);
 
-        var total = lines.Sum(l => l.LineTotal);
+		//var message = new OrderSubmitted(
+		//	 Guid.NewGuid().ToString(),
+		//	 order.CoffeeUser.FirstName,
+		//	 order.CoffeeUser.LastName,
+		//	 order.CoffeeUser.Email,
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-        var userName = User.Identity?.Name ?? "";
+		//	 address.Type.ToString(),
+		//	 address.Street,
+		//	 address.HouseNumber,
+		//	 address.City,
+		//	 address.PostalCode,
+		//	 address.CountryISO,
+		//	 address.UnitNumber,
 
-        var message = new OrderSubmitted(
-            OrderId: Guid.NewGuid(),
-            UserId: userId,
-            UserName: userName,
-            FirstName: model.FirstName ?? "",
-            LastName: model.LastName ?? "",
-            Email: model.Email ?? "",
-            Street: model.Street ?? "",
-            Postbus: model.Postbus ?? "",
-            City: model.City ?? "",
-            Postcode: model.Postcode ?? "",
-            Country: model.Country ?? "",
-            Total: total,
-            Lines: lines
-        );
+		//	 total,
+		//	 lines
+		//);
 
-        await _publish.Publish(message);
+		//await _publish.Publish(message);
 
-        // ✅ Opslaan/updaten van profiel voor volgende bestellingen
-        if (!string.IsNullOrWhiteSpace(userId))
-        {
-            var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+		//TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
+		//return RedirectToAction(nameof(Create));
+	}
 
-            if (profile == null)
-            {
-                profile = new UserProfile { UserId = userId };
-                _context.UserProfiles.Add(profile);
-            }
+	// GET: Orders/Edit/5
+	public async Task<IActionResult> Edit(long? id) {
+		if (id == null) {
+			return NotFound();
+		}
 
-            profile.FirstName = model.FirstName ?? "";
-            profile.LastName = model.LastName ?? "";
-            profile.Email = model.Email ?? "";
-            profile.Street = model.Street ?? "";
-            profile.Postbus = model.Postbus ?? "";
-            profile.City = model.City ?? "";
-            profile.Postcode = model.Postcode ?? "";
-            profile.Country = model.Country ?? "";
+		var order = await _context.Orders.FindAsync(id);
+		if (order == null) {
+			return NotFound();
+		}
+		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
+		return View(order);
+	}
 
-            await _context.SaveChangesAsync();
-        }
+	// POST: Orders/Edit/5
+	// To protect from overposting attacks, enable the specific properties you want to bind to.
+	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Edit(long id, [Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] Order order) {
+		if (id != order.Id) {
+			return NotFound();
+		}
 
-        TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-        return RedirectToAction(nameof(Create));
-    }
+		if (ModelState.IsValid) {
+			try {
+				_context.Update(order);
+				await _context.SaveChangesAsync();
+			} catch (DbUpdateConcurrencyException) {
+				if (!OrderExists(order.Id)) {
+					return NotFound();
+				} else {
+					throw;
+				}
+			}
+			return RedirectToAction(nameof(Index));
+		}
+		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		return View(order);
+	}
+
+	// GET: Orders/Delete/5
+	public async Task<IActionResult> Delete(long? id) {
+		if (id == null) {
+			return NotFound();
+		}
+
+		var order = await _context.Orders
+			 .Include(o => o.CoffeeUser)
+			 .FirstOrDefaultAsync(m => m.Id == id);
+		if (order == null) {
+			return NotFound();
+		}
+
+		return View(order);
+	}
+
+	// POST: Orders/Delete/5
+	[HttpPost, ActionName("Delete")]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> DeleteConfirmed(long id) {
+		var order = await _context.Orders.FindAsync(id);
+		if (order != null) {
+			_context.Orders.Remove(order);
+		}
+
+		await _context.SaveChangesAsync();
+		return RedirectToAction(nameof(Index));
+	}
+
+	private bool OrderExists(long id) {
+		return _context.Orders.Any(e => e.Id == id);
+	}
 }
