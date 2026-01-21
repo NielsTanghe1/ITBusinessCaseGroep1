@@ -32,49 +32,49 @@ public class MessagesController : ControllerBase {
 		[FromQuery] string countryISO,
 		[FromQuery] string unitNumber
 	) {
-		var product = _context.Coffees.FirstOrDefault(x => x.Id == productId);
-		if (product is null) {
-			return BadRequest($"Onbekend productId: {productId}");
-		}
+		//var product = _context.Coffees.FirstOrDefault(x => x.Id == productId);
+		//if (product is null) {
+		//	return BadRequest($"Onbekend productId: {productId}");
+		//}
 
-		if (qty <= 0) {
-			qty = 1;
-		}
+		//if (qty <= 0) {
+		//	qty = 1;
+		//}
 
-		var line = new OrderLine(
-			Guid.NewGuid().ToString(),
-			product.Id,
-			product.Name.ToString(),
-			product.Price,
-			qty,
-			product.Price * qty
-		);
+		//var line = new OrderDTO(
+		//	Guid.NewGuid().ToString(),
+		//	product.Id,
+		//	product.Name.ToString(),
+		//	product.Price,
+		//	qty,
+		//	product.Price * qty
+		//);
 
-		var total = line.LineTotal;
+		//var total = line.LineTotal;
 
-		var message = new OrderSubmitted(
-			Guid.NewGuid().ToString(),
-			firstName,
-			lastName,
-			email,
+		//var message = new OrderSubmitted(
+		//	Guid.NewGuid().ToString(),
+		//	firstName,
+		//	lastName,
+		//	email,
 
-			type,
-			street,
-			houseNumber,
-			city,
-			postalCode,
-			countryISO,
-			unitNumber,
+		//	type,
+		//	street,
+		//	houseNumber,
+		//	city,
+		//	postalCode,
+		//	countryISO,
+		//	unitNumber,
 
-			total,
-			new List<OrderLine> { line }
-		);
+		//	total,
+		//	new List<OrderDTO> { line }
+		//);
 
-		await _publishEndpoint.Publish(message);
+		//await _publishEndpoint.Publish(message);
 
 		return Ok(new {
 			published = true,
-			total
+			//total
 		});
 	}
 }

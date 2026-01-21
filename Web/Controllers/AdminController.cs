@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
-using Web.Data;
-using Web.Models;
+using Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Models.Entities.DTO;
 
 namespace Web.Controllers;
 
@@ -12,12 +12,12 @@ namespace Web.Controllers;
 public class AdminController : Controller {
 	private readonly UserManager<IdentityUser> _userManager;
 	private readonly RoleManager<IdentityRole> _roleManager;
-	private readonly ApplicationDbContext _db;
+	private readonly LocalDbContext _db;
 
 	public AdminController(
 		 UserManager<IdentityUser> userManager,
 		 RoleManager<IdentityRole> roleManager,
-		 ApplicationDbContext db) {
+		 LocalDbContext db) {
 		_userManager = userManager;
 		_roleManager = roleManager;
 		_db = db;
@@ -42,10 +42,10 @@ public class AdminController : Controller {
 	}
 
 	[HttpGet]
-	public IActionResult CreateUser() => View(new CreateUserVm());
+	public IActionResult CreateUser() => View(new CreateUserViewModel());
 
 	[HttpPost]
-	public async Task<IActionResult> CreateUser(CreateUserVm model) {
+	public async Task<IActionResult> CreateUser(CreateUserViewModel model) {
 		if (!ModelState.IsValid)
 			return View(model);
 
@@ -122,48 +122,54 @@ public class AdminController : Controller {
 	// ORDERS (LIST)
 	// -------------------
 	public async Task<IActionResult> Orders() {
-		var orders = await _db.Orders
-			 .OrderByDescending(o => o.CreatedAtUtc)
-			 .ToListAsync();
+		//var orders = await _db.Orders
+		//	 .OrderByDescending(o => o.CreatedAt)
+		//	 .ToListAsync();
 
-		var list = orders.Select(o =>
-		{
-			var parsed = TryParseOrder(o.PayloadJson);
+		//var list = orders.Select(o =>
+		//{
+		//	var parsed = new OrderDTO() {
+		//		CoffeeUserId = o.CoffeeUserId,
+		//		OrderId = o.Id,
+		//		CoffeeId = o.
+		//	};
 
-			return new AdminOrderListItemVm {
-				Id = o.Id,
-				OrderId = o.OrderId,
-				Status = o.Status,
-				CreatedAtUtc = o.CreatedAtUtc,
-				FullName = parsed != null ? $"{parsed.FirstName} {parsed.LastName}".Trim() : "(onbekend)",
-				Email = parsed?.Email ?? "(onbekend)",
-				Total = parsed?.Total
-			};
-		}).ToList();
+		//	return new AdminOrderListItemVm {
+		//		Id = o.Id,
+		//		OrderId = o.OrderId,
+		//		Status = o.Status,
+		//		CreatedAtUtc = o.CreatedAtUtc,
+		//		FullName = parsed != null ? $"{parsed.FirstName} {parsed.LastName}".Trim() : "(onbekend)",
+		//		Email = parsed?.Email ?? "(onbekend)",
+		//		Total = parsed?.Total
+		//	};
+		//}).ToList();
 
-		return View(list);
+		//return View(list);
+		return Ok();
 	}
 
 	// -------------------
 	// ORDERS (DETAILS)
 	// -------------------
 	public async Task<IActionResult> OrderDetails(int id) {
-		var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
-		if (order == null)
-			return NotFound();
+		//var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+		//if (order == null)
+		//	return NotFound();
 
-		var parsed = TryParseOrder(order.PayloadJson);
+		//var parsed = TryParseOrder(order.PayloadJson);
 
-		var vm = new AdminOrderDetailsVm {
-			Id = order.Id,
-			OrderId = order.OrderId,
-			Status = order.Status,
-			CreatedAtUtc = order.CreatedAtUtc,
-			RawJson = order.PayloadJson,
-			Payload = parsed
-		};
+		//var vm = new AdminOrderDetailsVm {
+		//	Id = order.Id,
+		//	OrderId = order.OrderId,
+		//	Status = order.Status,
+		//	CreatedAtUtc = order.CreatedAtUtc,
+		//	RawJson = order.PayloadJson,
+		//	Payload = parsed
+		//};
 
-		return View(vm);
+		//return View(vm);
+		return Ok();
 	}
 
 	private static readonly JsonSerializerOptions _jsonOptions = new() {
@@ -179,53 +185,81 @@ public class AdminController : Controller {
 	}
 }
 
-public class CreateUserVm {
+public class CreateUserViewModel {
 	public string Email { get; set; } = "";
 	public string Password { get; set; } = "";
-	public string? Role { get; set; }
+	public string? Role {
+		get; set;
+	}
 }
 
 // ---------- ViewModels ----------
-public class AdminOrderListItemVm {
-	public int Id { get; set; }
+public class AdminOrderListItemViewModel {
+	public int Id {
+		get; set;
+	}
 	public string OrderId { get; set; } = "";
 	public string Status { get; set; } = "";
-	public DateTime CreatedAtUtc { get; set; }
+	public DateTime CreatedAtUtc {
+		get; set;
+	}
 	public string FullName { get; set; } = "";
 	public string Email { get; set; } = "";
-	public decimal? Total { get; set; }
+	public decimal? Total {
+		get; set;
+	}
 }
 
-public class AdminOrderDetailsVm {
-	public int Id { get; set; }
+public class AdminOrderDetailsViewModel {
+	public int Id {
+		get; set;
+	}
 	public string OrderId { get; set; } = "";
 	public string Status { get; set; } = "";
-	public DateTime CreatedAtUtc { get; set; }
+	public DateTime CreatedAtUtc {
+		get; set;
+	}
 	public string RawJson { get; set; } = "";
-	public OrderSubmittedDto? Payload { get; set; }
+	public OrderSubmittedDto? Payload {
+		get; set;
+	}
 }
 
 // ---------- DTOs (matcht jouw JSON uit screenshot) ----------
 public class OrderSubmittedDto {
-	public string? OrderId { get; set; }
-	public string? FirstName { get; set; }
-	public string? LastName { get; set; }
-	public string? Email { get; set; }
+	public string? OrderId {
+		get; set;
+	}
+	public string? FirstName {
+		get; set;
+	}
+	public string? LastName {
+		get; set;
+	}
+	public string? Email {
+		get; set;
+	}
 
-	public string? Street { get; set; }
-	public string? Postbus { get; set; }
-	public string? City { get; set; }
-	public string? Postcode { get; set; }
-	public string? Country { get; set; }
+	public string? Street {
+		get; set;
+	}
+	public string? Postbus {
+		get; set;
+	}
+	public string? City {
+		get; set;
+	}
+	public string? Postcode {
+		get; set;
+	}
+	public string? Country {
+		get; set;
+	}
 
-	public decimal? Total { get; set; }
-	public List<OrderLineDto>? Lines { get; set; }
-}
-
-public class OrderLineDto {
-	public string? ProductId { get; set; }
-	public string? ProductName { get; set; }
-	public decimal? UnitPrice { get; set; }
-	public int? Quantity { get; set; }
-	public decimal? LineTotal { get; set; }
+	public decimal? Total {
+		get; set;
+	}
+	public List<OrderDTO>? Lines {
+		get; set;
+	}
 }

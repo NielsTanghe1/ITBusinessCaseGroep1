@@ -14,27 +14,11 @@ public class OrdersController : ControllerBase {
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> CreateOrder([FromBody] OrderCreated request) {
-		// Map the request to the full OrderCreated contract
-		var message = new OrderCreated(
-			 Guid.NewGuid().ToString(),
-			 request.ProductName,
-			 request.ProductType,
-			 request.Price,
-			 request.Quantity,
-			 request.FirstName,
-			 request.LastName,
-			 request.Email,
-			 request.Postcode,
-			 request.City,
-			 request.Street,
-			 request.Postbus,
-			 request.Country,
-			 request.Cardnumber,
-			 request.CVV
-		);
-
-		await _publishEndpoint.Publish(message);
+	public async Task<IActionResult> CreateOrder([FromBody] OrderDTO request) {
+		//// Map the request to the full OrderCreated contract
+		//var message = new OrderDTO(
+		//);
+		//await _publishEndpoint.Publish(message);
 
 		return Accepted();
 	}

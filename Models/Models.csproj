@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="Extensions\Mappings\" />
+    <Folder Include="Migrations\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 
