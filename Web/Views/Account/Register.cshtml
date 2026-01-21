@@ -1,0 +1,49 @@
+﻿@model Web.Models.LoginRegisterViewModel
+@{
+    ViewData["Title"] = "Account aanmaken";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-3">Account aanmaken</h2>
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="RegisterEmail" class="form-control" />
+                        <span asp-validation-for="RegisterEmail" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Wachtwoord</label>
+                        <input asp-for="RegisterPassword" type="password" class="form-control" />
+                        <span asp-validation-for="RegisterPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bevestig wachtwoord</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Registreren</button>
+                </form>
+
+                <hr />
+
+                <div class="d-flex justify-content-between">
+                    <span>Al een account?</span>
+                    <a asp-action="Login">Inloggen</a>
+                </div>
+
+                <div asp-validation-summary="All" class="text-danger mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

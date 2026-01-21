@@ -1,0 +1,78 @@
+﻿@model Models.Entities.Address
+
+@{
+	ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+	<h4>Address</h4>
+	<hr />
+	<dl class="row">
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.CoffeeUser)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.CoffeeUser.FirstName)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.Type)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.Type)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.Street)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.Street)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.HouseNumber)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.HouseNumber)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.City)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.City)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.PostalCode)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.PostalCode)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.CountryISO)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.CountryISO)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.UnitNumber)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.UnitNumber)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.CreatedAt)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.CreatedAt)
+		</dd>
+		<dt class="col-sm-2">
+			@Html.DisplayNameFor(model => model.DeletedAt)
+		</dt>
+		<dd class="col-sm-10">
+			@Html.DisplayFor(model => model.DeletedAt)
+		</dd>
+	</dl>
+</div>
+<div>
+	<a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+	<a asp-action="Index">Back to List</a>
+</div>

@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<div class="container mt-5">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5">
+            <h1 class="display-5 mb-4">@ViewData["Title"]</h1>
+            <p class="text-muted">Last updated: January 2026</p>
+
+            <section class="mb-5">
+                <h4>1. Information We Collect</h4>
+                <p>To process your orders via our messaging system, we collect the following information:</p>
+                <ul>
+                    <li><strong>Personal Identity:</strong> First name and last name.</li>
+                    <li><strong>Contact Information:</strong> Email address for order confirmations.</li>
+                    <li><strong>Shipping Details:</strong> Street address, city, postcode, and country.</li>
+                    <li><strong>Financial Data:</strong> Card number and CVV for payment verification.</li>
+                </ul>
+            </section>
+
+            <section class="mb-5">
+                <h4>2. How We Use Your Data</h4>
+                <p>Your data is published to a secure <strong>RabbitMQ</strong> broker. From there, it is distributed to our internal subscribers:</p>
+                <ul>
+                    <li><strong>Salesforce:</strong> To manage our customer relationships.</li>
+                    <li><strong>SAP-IDOC:</strong> To process logistics and inventory management.</li>
+                    <li><strong>Backup Systems:</strong> For disaster recovery and auditing purposes.</li>
+                </ul>
+            </section>
+
+            <section class="mb-5">
+                <h4>3. Data Security</h4>
+                <p>We prioritize the security of your information. Payment details are processed asynchronously and are not stored permanently within the web application's primary database. We encourage users to use development credentials for testing purposes on localhost.</p>
+            </section>
+
+            <div class="alert alert-info border-0">
+                <strong>Note:</strong> This site is part of an IT Business Case study and is designed to demonstrate modern decoupled architecture using .NET and MassTransit.
+            </div>
+        </div>
+    </div>
+</div>
