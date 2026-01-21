@@ -2,9 +2,9 @@
 @using Models.Data
 
 @{
-	ViewData["Title"] = "Bestelling plaatsen";
-	var context = ViewBag.Context as LocalDbContext;
-	var beans = context.Coffees.ToArray(); // lijst met bonen (Arabica/Robusta/...)
+    ViewData["Title"] = "Bestelling plaatsen";
+    var context = ViewBag.Context as LocalDbContext;
+    var beans = context.Coffees.ToArray(); // lijst met bonen (Arabica/Robusta/...)
 }
 
 @*
@@ -152,7 +152,8 @@
 
                                         <button type="button"
                                                 class="btn btn-sm btn-success"
-																onclick="addToCart(@i, 'Roasted', 'TOBEFIXED')"> @* @priceRoasted.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
+                                                onclick="addToCart(@i, 'Roasted', 'TOBEFIXED')">
+                                            @* @priceRoasted.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
                                             + Toevoegen
                                         </button>
                                     </div>
@@ -178,7 +179,8 @@
 
                                         <button type="button"
                                                 class="btn btn-sm btn-success"
-																onclick="addToCart(@i, 'Ground', 'TOBEFIXED')"> @* @priceGround.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
+                                                onclick="addToCart(@i, 'Ground', 'TOBEFIXED')">
+                                            @* @priceGround.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
                                             + Toevoegen
                                         </button>
                                     </div>
@@ -204,7 +206,8 @@
 
                                         <button type="button"
                                                 class="btn btn-sm btn-success"
-                                                onclick="addToCart(@i, 'Raw', 'TOBEFIXED')"> @* @priceRaw.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
+                                                onclick="addToCart(@i, 'Raw', 'TOBEFIXED')">
+                                            @* @priceRaw.ToString(System.Globalization.CultureInfo.InvariantCulture) *@
                                             + Toevoegen
                                         </button>
                                     </div>
@@ -306,213 +309,213 @@
 </div>
 
 @section Scripts {
-	<partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" />
 
-	<script>
-		// Cart opslag: key = `${index}|${type}` -> { index, type, beanName, beanId, kg, unitPrice }
-		const cart = new Map();
+    <script>
+        // Cart opslag: key = `${index}|${type}` -> { index, type, beanName, beanId, kg, unitPrice }
+        const cart = new Map();
 
-		function beanNameByIndex(i) {
-			 // neemt de titel uit de kaart
-			 const el = document.querySelector(`#inCart_${i}`)?.closest(".border")?.querySelector(".fw-bold");
-			 return el ? el.innerText.trim() : `Bean ${i}`;
-		}
+        function beanNameByIndex(i) {
+             // neemt de titel uit de kaart
+             const el = document.querySelector(`#inCart_${i}`)?.closest(".border")?.querySelector(".fw-bold");
+             return el ? el.innerText.trim() : `Bean ${i}`;
+        }
 
-		function beanIdByIndex(i) {
-			 // hidden input Items[i].BeanId
-			 const hidden = document.querySelector(`input[name="Items[${i}].BeanId"]`);
-			 return hidden ? hidden.value : "";
-		}
+        function beanIdByIndex(i) {
+             // hidden input Items[i].BeanId
+             const hidden = document.querySelector(`input[name="Items[${i}].BeanId"]`);
+             return hidden ? hidden.value : "";
+        }
 
-		function setHiddenKg(i, type, kgTotalForType) {
-			 if (type === "Roasted") document.getElementById(`roasted_${i}`).value = kgTotalForType;
-			 if (type === "Ground")  document.getElementById(`ground_${i}`).value  = kgTotalForType;
-			 if (type === "Raw")     document.getElementById(`raw_${i}`).value     = kgTotalForType;
-		}
+        function setHiddenKg(i, type, kgTotalForType) {
+             if (type === "Roasted") document.getElementById(`roasted_${i}`).value = kgTotalForType;
+             if (type === "Ground")  document.getElementById(`ground_${i}`).value  = kgTotalForType;
+             if (type === "Raw")     document.getElementById(`raw_${i}`).value     = kgTotalForType;
+        }
 
-		function getHiddenKg(i, type) {
-			 if (type === "Roasted") return parseInt(document.getElementById(`roasted_${i}`).value || "0");
-			 if (type === "Ground")  return parseInt(document.getElementById(`ground_${i}`).value  || "0");
-			 if (type === "Raw")     return parseInt(document.getElementById(`raw_${i}`).value     || "0");
-			 return 0;
-		}
+        function getHiddenKg(i, type) {
+             if (type === "Roasted") return parseInt(document.getElementById(`roasted_${i}`).value || "0");
+             if (type === "Ground")  return parseInt(document.getElementById(`ground_${i}`).value  || "0");
+             if (type === "Raw")     return parseInt(document.getElementById(`raw_${i}`).value     || "0");
+             return 0;
+        }
 
-		function addToCart(index, type, unitPrice) {
-			 const typeLower = type.toLowerCase();
-			 const sel = document.getElementById(`sel_${typeLower}_${index}`);
-			 const kgToAdd = parseInt(sel?.value || "1");
-			 const price = parseFloat(unitPrice);
+        function addToCart(index, type, unitPrice) {
+             const typeLower = type.toLowerCase();
+             const sel = document.getElementById(`sel_${typeLower}_${index}`);
+             const kgToAdd = parseInt(sel?.value || "1");
+             const price = parseFloat(unitPrice);
 
-			 const key = `${index}|${type}`;
-			 const existing = cart.get(key);
+             const key = `${index}|${type}`;
+             const existing = cart.get(key);
 
-			 const beanName = beanNameByIndex(index);
-			 const beanId = beanIdByIndex(index);
+             const beanName = beanNameByIndex(index);
+             const beanId = beanIdByIndex(index);
 
-			 const newKg = (existing?.kg || 0) + kgToAdd;
+             const newKg = (existing?.kg || 0) + kgToAdd;
 
-			 cart.set(key, {
-				  index,
-				  type,
-				  beanName,
-				  beanId,
-				  kg: newKg,
-				  unitPrice: price
-			 });
+             cart.set(key, {
+                  index,
+                  type,
+                  beanName,
+                  beanId,
+                  kg: newKg,
+                  unitPrice: price
+             });
 
-			 // sync hidden field for this type (total kg for that type)
-			 setHiddenKg(index, type, newKg);
+             // sync hidden field for this type (total kg for that type)
+             setHiddenKg(index, type, newKg);
 
-			 renderCart();
-		}
+             renderCart();
+        }
 
-		function removeFromCart(index, type) {
-			 const key = `${index}|${type}`;
-			 cart.delete(key);
+        function removeFromCart(index, type) {
+             const key = `${index}|${type}`;
+             cart.delete(key);
 
-			 // hidden = 0 voor dat type
-			 setHiddenKg(index, type, 0);
+             // hidden = 0 voor dat type
+             setHiddenKg(index, type, 0);
 
-			 renderCart();
-		}
+             renderCart();
+        }
 
-		function changeKg(index, type, delta) {
-			 const key = `${index}|${type}`;
-			 const item = cart.get(key);
-			 if (!item) return;
+        function changeKg(index, type, delta) {
+             const key = `${index}|${type}`;
+             const item = cart.get(key);
+             if (!item) return;
 
-			 const next = item.kg + delta;
-			 if (next <= 0) {
-				  removeFromCart(index, type);
-				  return;
-			 }
+             const next = item.kg + delta;
+             if (next <= 0) {
+                  removeFromCart(index, type);
+                  return;
+             }
 
-			 item.kg = next;
-			 cart.set(key, item);
+             item.kg = next;
+             cart.set(key, item);
 
-			 setHiddenKg(index, type, next);
-			 renderCart();
-		}
+             setHiddenKg(index, type, next);
+             renderCart();
+        }
 
-		function renderCart() {
-			 const list = document.getElementById("cartList");
-			 const empty = document.getElementById("cartEmpty");
+        function renderCart() {
+             const list = document.getElementById("cartList");
+             const empty = document.getElementById("cartEmpty");
 
-			 list.innerHTML = "";
+             list.innerHTML = "";
 
-			 let totalKgAll = 0;
-			 let totalPrice = 0;
+             let totalKgAll = 0;
+             let totalPrice = 0;
 
-			 // per product kaart: update "in winkelmand" total kg
-			 for (let i = 0; i < @beans.Count(); i++) {
-				  const roasted = getHiddenKg(i, "Roasted");
-				  const ground  = getHiddenKg(i, "Ground");
-				  const raw     = getHiddenKg(i, "Raw");
-				  const sum = roasted + ground + raw;
-				  const label = document.getElementById(`inCart_${i}`);
-				  if (label) label.innerText = sum.toString();
-			 }
+             // per product kaart: update "in winkelmand" total kg
+             for (let i = 0; i < @beans.Count(); i++) {
+                  const roasted = getHiddenKg(i, "Roasted");
+                  const ground  = getHiddenKg(i, "Ground");
+                  const raw     = getHiddenKg(i, "Raw");
+                  const sum = roasted + ground + raw;
+                  const label = document.getElementById(`inCart_${i}`);
+                  if (label) label.innerText = sum.toString();
+             }
 
-			 for (const [key, item] of cart.entries()) {
-				  const lineTotal = item.kg * item.unitPrice;
-				  totalKgAll += item.kg;
-				  totalPrice += lineTotal;
+             for (const [key, item] of cart.entries()) {
+                  const lineTotal = item.kg * item.unitPrice;
+                  totalKgAll += item.kg;
+                  totalPrice += lineTotal;
 
-				  const row = document.createElement("div");
-				  row.className = "border rounded-4 p-3";
+                  const row = document.createElement("div");
+                  row.className = "border rounded-4 p-3";
 
-				  row.innerHTML = `
-						<div class="d-flex justify-content-between align-items-start gap-2">
-							 <div>
-								  <div class="fw-semibold">${escapeHtml(item.type)} ${escapeHtml(item.beanName)}</div>
-								  <div class="text-muted small">${escapeHtml(item.beanId)} • €${item.unitPrice.toFixed(2)}/kg</div>
-							 </div>
+                  row.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                             <div>
+                                  <div class="fw-semibold">${escapeHtml(item.type)} ${escapeHtml(item.beanName)}</div>
+                                  <div class="text-muted small">${escapeHtml(item.beanId)} • €${item.unitPrice.toFixed(2)}/kg</div>
+                             </div>
 
-							 <button type="button" class="btn btn-sm btn-outline-danger"
-										onclick="removeFromCart(${item.index}, '${item.type}')">
-								  Verwijder
-							 </button>
-						</div>
+                             <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeFromCart(${item.index}, '${item.type}')">
+                                  Verwijder
+                             </button>
+                        </div>
 
-						<div class="d-flex justify-content-between align-items-center mt-2">
-							 <div class="d-flex align-items-center gap-2">
-								  <button type="button" class="btn btn-sm btn-outline-secondary"
-											 onclick="changeKg(${item.index}, '${item.type}', -1)">-</button>
-								  <div class="fw-semibold">${item.kg} kg</div>
-								  <button type="button" class="btn btn-sm btn-outline-secondary"
-											 onclick="changeKg(${item.index}, '${item.type}', 1)">+</button>
-							 </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                             <div class="d-flex align-items-center gap-2">
+                                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                                             onclick="changeKg(${item.index}, '${item.type}', -1)">-</button>
+                                  <div class="fw-semibold">${item.kg} kg</div>
+                                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                                             onclick="changeKg(${item.index}, '${item.type}', 1)">+</button>
+                             </div>
 
-							 <div class="fw-bold">€${lineTotal.toFixed(2)}</div>
-						</div>
-				  `;
+                             <div class="fw-bold">€${lineTotal.toFixed(2)}</div>
+                        </div>
+                  `;
 
-				  list.appendChild(row);
-			 }
+                  list.appendChild(row);
+             }
 
-			 empty.style.display = cart.size === 0 ? "block" : "none";
+             empty.style.display = cart.size === 0 ? "block" : "none";
 
-			 // badge + total
-			 const badge = document.getElementById("cartBadge");
-			 if (totalKgAll > 0) {
-				  badge.style.display = "inline-block";
-				  badge.innerText = totalKgAll.toString();
-			 } else {
-				  badge.style.display = "none";
-			 }
+             // badge + total
+             const badge = document.getElementById("cartBadge");
+             if (totalKgAll > 0) {
+                  badge.style.display = "inline-block";
+                  badge.innerText = totalKgAll.toString();
+             } else {
+                  badge.style.display = "none";
+             }
 
-			 document.getElementById("cartTotal").innerText = totalPrice.toFixed(2);
-			 document.getElementById("cartTotal2").innerText = totalPrice.toFixed(2);
-		}
+             document.getElementById("cartTotal").innerText = totalPrice.toFixed(2);
+             document.getElementById("cartTotal2").innerText = totalPrice.toFixed(2);
+        }
 
-		// Basic required fields popup (zoals je eerder wou)
-		document.getElementById("orderForm").addEventListener("submit", function (e) {
-			 // minstens 1 item in mand (minstens 1 hidden > 0)
-			 let hasAny = false;
-			 for (let i = 0; i < @beans.Count(); i++) {
-				  const sum =
-						getHiddenKg(i, "Roasted") +
-						getHiddenKg(i, "Ground") +
-						getHiddenKg(i, "Raw");
-				  if (sum > 0) { hasAny = true; break; }
-			 }
+        // Basic required fields popup (zoals je eerder wou)
+        document.getElementById("orderForm").addEventListener("submit", function (e) {
+             // minstens 1 item in mand (minstens 1 hidden > 0)
+             let hasAny = false;
+             for (let i = 0; i < @beans.Count(); i++) {
+                  const sum =
+                        getHiddenKg(i, "Roasted") +
+                        getHiddenKg(i, "Ground") +
+                        getHiddenKg(i, "Raw");
+                  if (sum > 0) { hasAny = true; break; }
+             }
 
-			 const requiredIds = [
-				  ["FirstName", "Voornaam"],
-				  ["LastName", "Achternaam"],
-				  ["Email", "Email"],
-				  ["Street", "Straat"],
-				  ["Postbus", "Postbus"],
-				  ["City", "Stad"],
-				  ["Postcode", "Postcode"],
-				  ["Country", "Land"],
-			 ];
+             const requiredIds = [
+                  ["FirstName", "Voornaam"],
+                  ["LastName", "Achternaam"],
+                  ["Email", "Email"],
+                  ["Street", "Straat"],
+                  ["Postbus", "Postbus"],
+                  ["City", "Stad"],
+                  ["Postcode", "Postcode"],
+                  ["Country", "Land"],
+             ];
 
-			 const missing = [];
-			 for (const [id, label] of requiredIds) {
-				  const val = document.getElementById(id)?.value?.trim();
-				  if (!val) missing.push(label);
-			 }
+             const missing = [];
+             for (const [id, label] of requiredIds) {
+                  const val = document.getElementById(id)?.value?.trim();
+                  if (!val) missing.push(label);
+             }
 
-			 if (!hasAny) missing.unshift("Minstens 1 product in winkelmand");
+             if (!hasAny) missing.unshift("Minstens 1 product in winkelmand");
 
-			 if (missing.length > 0) {
-				  e.preventDefault();
-				  alert("Je bent dit vergeten in te vullen:\n- " + missing.join("\n- "));
-			 }
-		});
+             if (missing.length > 0) {
+                  e.preventDefault();
+                  alert("Je bent dit vergeten in te vullen:\n- " + missing.join("\n- "));
+             }
+        });
 
-		function escapeHtml(str) {
-			 return (str ?? "")
-				  .toString()
-				  .replaceAll("&", "&amp;")
-				  .replaceAll("<", "&lt;")
-				  .replaceAll(">", "&gt;")
-				  .replaceAll('"', "&quot;")
-				  .replaceAll("'", "&#039;");
-		}
+        function escapeHtml(str) {
+             return (str ?? "")
+                  .toString()
+                  .replaceAll("&", "&amp;")
+                  .replaceAll("<", "&lt;")
+                  .replaceAll(">", "&gt;")
+                  .replaceAll('"', "&quot;")
+                  .replaceAll("'", "&#039;");
+        }
 
-		// init
-		renderCart();
-	</script>
+        // init
+        renderCart();
+    </script>
 }

@@ -1,43 +1,68 @@
-﻿@model Models.Entities.Order
-
+﻿@model Web.Models.UserProfile
 @{
-	ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Mijn profiel";
 }
 
-<h1>Edit</h1>
+<h2 class="mb-3">Mijn profiel</h2>
 
-<h4>Order</h4>
-<hr />
-<div class="row">
-	<div class="col-md-4">
-		<form asp-action="Edit">
-			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-			<input type="hidden" asp-for="Id" />
-			<input type="hidden" asp-for="CreatedAt" />
-			<input type="hidden" asp-for="DeletedAt" />
-			<div class="form-group">
-				<label asp-for="CoffeeUserId" class="control-label"></label>
-				<select asp-for="CoffeeUserId" class="form-control" asp-items="ViewBag.CoffeeUserId"></select>
-				<span asp-validation-for="CoffeeUserId" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<label asp-for="Status" class="control-label"></label>
-				<select asp-for="Status" class="form-control" asp-items="ViewBag.StatusTypes"></select>
-				<span asp-validation-for="Status" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<input type="submit" value="Save" class="btn btn-primary" />
-			</div>
-		</form>
-	</div>
-</div>
+@if (TempData["ProfileSaved"] != null)
+{
+    <div class="alert alert-success">@TempData["ProfileSaved"]</div>
+}
 
-<div>
-	<a asp-action="Index">Back to List</a>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Voornaam</label>
+                    <input class="form-control" asp-for="FirstName" />
+                    <span class="text-danger" asp-validation-for="FirstName"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Achternaam</label>
+                    <input class="form-control" asp-for="LastName" />
+                    <span class="text-danger" asp-validation-for="LastName"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" asp-for="Email" />
+                    <span class="text-danger" asp-validation-for="Email"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Land</label>
+                    <input class="form-control" asp-for="Country" />
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label">Straat</label>
+                    <input class="form-control" asp-for="Street" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Postbus</label>
+                    <input class="form-control" asp-for="Postbus" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Stad</label>
+                    <input class="form-control" asp-for="City" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Postcode</label>
+                    <input class="form-control" asp-for="Postcode" />
+                </div>
+            </div>
+
+            <button class="btn btn-primary mt-3" type="submit">Opslaan</button>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
+    <partial name="_ValidationScriptsPartial" />
 }

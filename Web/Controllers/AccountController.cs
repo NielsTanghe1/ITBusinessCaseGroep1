@@ -1,35 +1,47 @@
-﻿using Web.Models;
+﻿using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Data;
+using Models.Entities;
+using Web.Models;
 
 namespace Web.Controllers;
 
 public class AccountController : Controller {
-	private readonly UserManager<IdentityUser> _userManager;
-	private readonly SignInManager<IdentityUser> _signInManager;
-	private readonly LocalDbContext _context;
+	private readonly UserManager<CoffeeUser> _userManager;
+	private readonly SignInManager<CoffeeUser> _signInManager;
+	private readonly ISendEndpointProvider _sendEndpointProvider;
 
 	public AccountController(
-		 UserManager<IdentityUser> userManager,
-		 SignInManager<IdentityUser> signInManager,
-		 LocalDbContext context) {
+		 UserManager<CoffeeUser> userManager,
+		 SignInManager<CoffeeUser> signInManager,
+		 ISendEndpointProvider sendEndpointProvider) {
 		_userManager = userManager;
 		_signInManager = signInManager;
-		_context = context;
+		_sendEndpointProvider = sendEndpointProvider;
 	}
 
+	// =========================
+	// LOGIN + REGISTER PAGE
+	// =========================
 	[AllowAnonymous]
 	[HttpGet]
-	public IActionResult LoginRegister() {
+	public IActionResult LoginRegister(string? returnUrl = null) {
+		ViewData["ReturnUrl"] = returnUrl;
 		return View(new LoginRegisterViewModel());
 	}
 
+	// =========================
+	// LOGIN
+	// =========================
 	[AllowAnonymous]
 	[HttpPost]
-	public async Task<IActionResult> Login(LoginRegisterViewModel model) {
-		// Alleen login velden relevant
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Login(LoginRegisterViewModel model, string? returnUrl = null) {
+		ViewData["ReturnUrl"] = returnUrl;
+
+		// Alleen login velden valideren
 		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterEmail));
 		ModelState.Remove(nameof(LoginRegisterViewModel.RegisterPassword));
 		ModelState.Remove(nameof(LoginRegisterViewModel.ConfirmPassword));
@@ -50,65 +62,84 @@ public class AccountController : Controller {
 			 isPersistent: false,
 			 lockoutOnFailure: false);
 
-		if (result.Succeeded)
-			return RedirectToAction("Index", "Home");
+		if (result.Succeeded) {
+			if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+				return Redirect(returnUrl);
 
-		ModelState.AddModelError("", "Login mislukt. Controleer je email en wachtwoord.");
+			return RedirectToAction("Index", "Home");
+		}
+
+		ModelState.AddModelError("", "Login mislukt. Controleer je email/wachtwoord.");
 		return View("LoginRegister", model);
 	}
 
+	// =========================
+	// REGISTER
+	// =========================
 	[AllowAnonymous]
 	[HttpPost]
+	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Register(LoginRegisterViewModel model) {
-		//// Alleen register velden relevant
-		//ModelState.Remove(nameof(LoginRegisterViewModel.LoginEmail));
-		//ModelState.Remove(nameof(LoginRegisterViewModel.LoginPassword));
+		// Alleen register velden valideren
+		ModelState.Remove(nameof(LoginRegisterViewModel.LoginEmail));
+		ModelState.Remove(nameof(LoginRegisterViewModel.LoginPassword));
 
-		//if (!ModelState.IsValid)
-		//    return View("LoginRegister", model);
+		if (!ModelState.IsValid)
+			return View("LoginRegister", model);
 
-		//var user = new IdentityUser
-		//{
-		//    UserName = model.RegisterEmail,
-		//    Email = model.RegisterEmail
-		//};
+		// ✅ CoffeeUser (long identity) + required FirstName/LastName invullen
+		var user = new CoffeeUser {
+			UserName = model.RegisterEmail,
+			Email = model.RegisterEmail,
 
-		//var result = await _userManager.CreateAsync(user, model.RegisterPassword!);
+			FirstName = model.FirstName ?? "",
+			LastName = model.LastName ?? "",
 
-		//if (!result.Succeeded)
-		//{
-		//    foreach (var error in result.Errors)
-		//        ModelState.AddModelError("", error.Description);
 
-		//    return View("LoginRegister", model);
-		//}
+		};
 
-		//// ✅ Profiel opslaan (prefill checkout)
-		//var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
-		//if (profile == null)
-		//{
-		//    profile = new UserProfile { UserId = user.Id };
-		//    _context.UserProfiles.Add(profile);
-		//}
+		var createResult = await _userManager.CreateAsync(user, model.RegisterPassword!);
 
-		//profile.Email = model.RegisterEmail ?? "";
-		//profile.FirstName = model.FirstName ?? "";
-		//profile.LastName = model.LastName ?? "";
-		//profile.Street = model.Street ?? "";
-		//profile.Postbus = model.Postbus ?? "";
-		//profile.City = model.City ?? "";
-		//profile.Postcode = model.Postcode ?? "";
-		//profile.Country = model.Country ?? "";
+		if (!createResult.Succeeded) {
+			foreach (var err in createResult.Errors)
+				ModelState.AddModelError("", err.Description);
 
-		//await _context.SaveChangesAsync();
+			return View("LoginRegister", model);
+		}
 
-		//await _signInManager.SignInAsync(user, isPersistent: false);
-		//return RedirectToAction("Index", "Home");
-		return Ok();
+		// ✅ (OPTIONEEL) Stuur naar RabbitMQ queue AccountSubmitted
+		// Zet dit blok UIT als je (nog) geen AccountSubmitted contract hebt.
+		try {
+			var endpoint = await _sendEndpointProvider.GetSendEndpoint(new Uri("queue:AccountSubmitted"));
+
+			// Als je dit contract al hebt, pas de namespace hieronder aan:
+			// using Web.Contracts;
+			await endpoint.Send(new {
+				CoffeeUserId = user.Id,
+				Email = user.Email ?? "",
+				FirstName = user.FirstName,
+				LastName = user.LastName,
+				Street = model.Street ?? "",
+				Postbus = model.Postbus ?? "",
+				City = model.City ?? "",
+				Postcode = model.Postcode ?? "",
+				Country = model.Country ?? ""
+			});
+		} catch {
+			// We willen register niet laten falen als RabbitMQ even down is.
+			// Als je wél hard wil falen, verwijder deze try/catch.
+		}
+
+		await _signInManager.SignInAsync(user, isPersistent: false);
+		return RedirectToAction("Index", "Home");
 	}
 
+	// =========================
+	// LOGOUT
+	// =========================
 	[Authorize]
 	[HttpPost]
+	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Logout() {
 		await _signInManager.SignOutAsync();
 		return RedirectToAction(nameof(LoginRegister));
