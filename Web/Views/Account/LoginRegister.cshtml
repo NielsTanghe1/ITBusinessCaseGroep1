@@ -1,99 +1,258 @@
 ﻿@model Web.Models.LoginRegisterViewModel
 
-@{
-    ViewData["Title"] = "Login / Register";
-}
+<div class="boutique-wrapper">
+	<div class="container py-5">
 
-<h2>Login</h2>
-<form asp-controller="Account" asp-action="Login" method="post">
-    <div>
-        <label asp-for="LoginEmail"></label>
-        <input asp-for="LoginEmail" />
-        <span asp-validation-for="LoginEmail" class="text-danger"></span>
-    </div>
+		<header class="text-center mb-5">
+			<span class="text-uppercase tracking-widest text-white-50 small">Established 2024</span>
+			<h1 class="display-4 text-white serif-font mt-2">The Bean Collective</h1>
+			<div class="gold-divider mx-auto"></div>
+		</header>
 
-    <div>
-        <label asp-for="LoginPassword"></label>
-        <input asp-for="LoginPassword" type="password" />
-        <span asp-validation-for="LoginPassword" class="text-danger"></span>
-    </div>
+		<div class="row g-5 justify-content-center">
+			<div class="col-lg-4">
+				<div class="boutique-card shadow-lg">
+					<div class="card-header-minimal">
+						<h2 class="serif-font">Sign In</h2>
+						<p>Access your roasting profile.</p>
+					</div>
 
-    <button type="submit">Login</button>
-</form>
+					<form asp-controller="Account" asp-action="Login" method="post">
+						<div class="field-wrapper">
+							<label asp-for="LoginEmail">Email Address</label>
+							<input asp-for="LoginEmail" class="boutique-input" placeholder="e.g. johan@koffie.nl" />
+							<span asp-validation-for="LoginEmail" class="error-msg"></span>
+						</div>
 
-<hr />
+						<div class="field-wrapper">
+							<label asp-for="LoginPassword">Password</label>
+							<input asp-for="LoginPassword" type="password" class="boutique-input" placeholder="••••••••" />
+							<span asp-validation-for="LoginPassword" class="error-msg"></span>
+						</div>
 
-<h2>Registreren</h2>
-<form asp-controller="Account" asp-action="Register" method="post">
-    <div>
-        <label asp-for="RegisterEmail"></label>
-        <input asp-for="RegisterEmail" />
-        <span asp-validation-for="RegisterEmail" class="text-danger"></span>
-    </div>
+						<button type="submit" class="btn-boutique-dark mt-3">LOG IN</button>
+					</form>
+				</div>
+			</div>
 
-    <div>
-        <label asp-for="RegisterPassword"></label>
-        <input asp-for="RegisterPassword" type="password" />
-        <span asp-validation-for="RegisterPassword" class="text-danger"></span>
-    </div>
+			<div class="col-lg-7">
+				<div class="boutique-card shadow-lg">
+					<div class="card-header-minimal">
+						<h2 class="serif-font">New Member</h2>
+						<p>Join for exclusive access to seasonal harvests.</p>
+					</div>
 
-    <div>
-        <label asp-for="ConfirmPassword"></label>
-        <input asp-for="ConfirmPassword" type="password" />
-        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-    </div>
+					<form asp-controller="Account" asp-action="Register" method="post">
+						<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-    <hr />
+						<h5 class="sub-heading mb-4">Account Credentials</h5>
+						<div class="row g-4 mb-5">
+							<div class="col-12">
+								<div class="field-wrapper">
+									<label asp-for="RegisterEmail">Email</label>
+									<input asp-for="RegisterEmail" class="boutique-input" placeholder="Enter your email" />
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="field-wrapper">
+									<label asp-for="RegisterPassword">Password</label>
+									<input asp-for="RegisterPassword" type="password" class="boutique-input" placeholder="Min. 8 characters" />
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="field-wrapper">
+									<label asp-for="ConfirmPassword">Confirm Password</label>
+									<input asp-for="ConfirmPassword" type="password" class="boutique-input" placeholder="Repeat password" />
+								</div>
+							</div>
+						</div>
 
-    <h3>Gegevens (voor automatische invulling bij bestellingen)</h3>
+						<h5 class="sub-heading mb-4">Shipping Information</h5>
+						<div class="row g-4">
+							<div class="col-md-6">
+								<div class="field-wrapper">
+									<label asp-for="FirstName">First Name</label>
+									<input asp-for="FirstName" class="boutique-input" placeholder="John" />
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="field-wrapper">
+									<label asp-for="LastName">Last Name</label>
+									<input asp-for="LastName" class="boutique-input" placeholder="Doe" />
+								</div>
+							</div>
+							<div class="col-12">
+								<div class="field-wrapper">
+									<label asp-for="Street">Street Address</label>
+									<input asp-for="Street" class="boutique-input" placeholder="Street name and house number" />
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="field-wrapper">
+									<label asp-for="Postcode">Postcode</label>
+									<input asp-for="Postcode" class="boutique-input" placeholder="1234 AB" />
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="field-wrapper">
+									<label asp-for="Postbus">PO Box</label>
+									<input asp-for="Postbus" class="boutique-input" placeholder="Optional" />
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="field-wrapper">
+									<label asp-for="City">City</label>
+									<input asp-for="City" class="boutique-input" placeholder="Amsterdam" />
+								</div>
+							</div>
+							<div class="col-12 mb-2">
+								<div class="field-wrapper">
+									<label asp-for="Country">Country</label>
+									<input asp-for="Country" class="boutique-input" placeholder="Netherlands" />
+								</div>
+							</div>
+						</div>
 
-    <div>
-        <label asp-for="FirstName"></label>
-        <input asp-for="FirstName" />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
-    </div>
+						<button type="submit" class="btn-boutique-gold mt-4">CREATE ACCOUNT</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
-    <div>
-        <label asp-for="LastName"></label>
-        <input asp-for="LastName" />
-        <span asp-validation-for="LastName" class="text-danger"></span>
-    </div>
+<style>
+	/* 1. Immersive Background */
+	.boutique-wrapper {
+		min-height: 100vh;
+		background: linear-gradient(rgba(15, 10, 5, 0.8), rgba(15, 10, 5, 0.8)), url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2000&auto=format&fit=crop');
+		background-size: cover;
+		background-position: center;
+		background-attachment: scroll;
+		padding-bottom: 80px;
+	}
 
-    <div>
-        <label asp-for="Street"></label>
-        <input asp-for="Street" />
-        <span asp-validation-for="Street" class="text-danger"></span>
-    </div>
+	.serif-font {
+		font-family: 'Playfair Display', serif;
+	}
 
-    <div>
-        <label asp-for="Postbus"></label>
-        <input asp-for="Postbus" />
-        <span asp-validation-for="Postbus" class="text-danger"></span>
-    </div>
+	.tracking-widest {
+		letter-spacing: 0.4em;
+	}
 
-    <div>
-        <label asp-for="City"></label>
-        <input asp-for="City" />
-        <span asp-validation-for="City" class="text-danger"></span>
-    </div>
+	/* 2. Enhanced Card Design with more White Space */
+	.boutique-card {
+		background: #ffffff;
+		padding: 60px; /* Increased internal margin (padding) */
+		border-radius: 8px;
+		border: 1px solid rgba(0,0,0,0.05);
+	}
 
-    <div>
-        <label asp-for="Postcode"></label>
-        <input asp-for="Postcode" />
-        <span asp-validation-for="Postcode" class="text-danger"></span>
-    </div>
+	.card-header-minimal h2 {
+		font-size: 2.2rem;
+		color: #2C1810;
+		margin-bottom: 10px;
+	}
 
-    <div>
-        <label asp-for="Country"></label>
-        <input asp-for="Country" />
-        <span asp-validation-for="Country" class="text-danger"></span>
-    </div>
+	.card-header-minimal p {
+		color: #888;
+		margin-bottom: 50px;
+	}
 
-    <button type="submit">Registreren</button>
-</form>
+	/* 3. High-Visibility Inputs */
+	.field-wrapper {
+		margin-bottom: 24px; /* Space between rows */
+		display: flex;
+		flex-direction: column;
+	}
 
-<div asp-validation-summary="All" class="text-danger"></div>
+		.field-wrapper label {
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			font-weight: 800;
+			letter-spacing: 1.2px;
+			color: #5d4037;
+			margin-bottom: 10px;
+		}
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+	.boutique-input {
+		background-color: #fcfaf8; /* Slight cream tint for visibility */
+		border: 1.5px solid #eee; /* Light solid border */
+		padding: 14px 18px;
+		font-size: 0.95rem;
+		border-radius: 4px;
+		color: #333;
+		transition: all 0.2s ease-in-out;
+	}
+
+		.boutique-input::placeholder {
+			color: #bbb;
+			font-style: italic;
+			font-size: 0.85rem;
+		}
+
+		.boutique-input:focus {
+			outline: none;
+			background-color: #fff;
+			border-color: #c5a059; /* Gold accent border */
+			box-shadow: 0 4px 12px rgba(197, 160, 89, 0.1);
+		}
+
+	/* 4. Boutique Buttons */
+	.btn-boutique-dark {
+		background: #2C1810;
+		color: #fff;
+		border: none;
+		width: 100%;
+		padding: 18px;
+		font-weight: 700;
+		letter-spacing: 2px;
+		transition: 0.3s;
+	}
+
+	.btn-boutique-gold {
+		background: transparent;
+		color: #2C1810;
+		border: 2px solid #2C1810;
+		width: 100%;
+		padding: 18px;
+		font-weight: 700;
+		letter-spacing: 2px;
+		transition: all 0.3s;
+	}
+
+		.btn-boutique-gold:hover {
+			background: #2C1810;
+			color: #fff;
+		}
+
+	.sub-heading {
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		color: #c5a059;
+		letter-spacing: 2px;
+		font-weight: 800;
+		border-bottom: 1px solid #f8f8f8;
+		padding-bottom: 12px;
+	}
+
+	.gold-divider {
+		width: 50px;
+		height: 3px;
+		background: #c5a059;
+		margin-top: 24px;
+	}
+
+	.error-msg {
+		color: #dc3545;
+		font-size: 0.75rem;
+		margin-top: 6px;
+	}
+
+	/* Responsive adjustments */
+	@@media (max-width: 768px) {
+		.boutique-card {
+			padding: 30px;
+		}
+	}
+</style>
