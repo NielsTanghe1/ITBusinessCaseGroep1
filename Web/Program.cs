@@ -146,6 +146,4 @@ app.MapControllerRoute(
 	pattern: "{controller=Home}/{action=Index}/{id?}")
 	.WithStaticAssets();
 
-await IdentitySeed.EnsureAdminAsync(app.Services);
-
 app.Run();
