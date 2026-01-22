@@ -25,6 +25,7 @@ builder.Services.AddDbContext<LocalDbContext>(options =>
 		)
 	));
 
+
 builder.Services.AddDbContext<GlobalDbContext>(options =>
 	options.UseSqlServer(
 		builder.Configuration.GetConnectionString("GlobalDbContextConnection")
