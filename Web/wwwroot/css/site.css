@@ -222,3 +222,7 @@ body {
 .cart-item:last-child {
 	border-bottom: none;
 }
+
+.hidden {
+	display: none;
+}

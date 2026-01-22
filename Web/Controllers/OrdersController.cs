@@ -1,10 +1,13 @@
 ﻿using MassTransit;
+using MassTransit.Transports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.DTO;
 using Models.Entities.Enums;
+using Web.Models;
 using Web.Services;
 
 namespace Web.Controllers;
@@ -12,12 +15,14 @@ namespace Web.Controllers;
 public class OrdersController : Controller {
 	private readonly LocalDbContext _context;
 	private readonly Utilities _utilities;
-	private readonly IPublishEndpoint _publish;
+	private readonly ISendEndpointProvider _sendEndpointProvider;
+	private readonly IConfiguration _configuration;
 
-	public OrdersController(LocalDbContext context, Utilities utilities, IPublishEndpoint publish) {
+	public OrdersController(LocalDbContext context, Utilities utilities, ISendEndpointProvider sendEndpointProvider, IConfiguration configuration) {
 		_context = context;
 		_utilities = utilities;
-		_publish = publish;
+		_sendEndpointProvider = sendEndpointProvider;
+		_configuration = configuration;
 	}
 
 	// GET: Orders
@@ -45,8 +50,21 @@ public class OrdersController : Controller {
 	// GET: Orders/Create
 	public IActionResult Create() {
 		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+		ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
 		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
-		return View();
+		//var queryable = _context.Orders.Where(order => order.CoffeeUserId == 11);
+		//Order? order = queryable.ElementAt(2);
+		Order order = new() {
+			CoffeeUserId = 11
+		};
+
+		OrderViewModel viewModel = new() {
+			CoffeeUserId = order.CoffeeUserId,
+			OrderId = order.Id,
+			Items = []
+			//Items = _context.OrderItems.Where(item => item.OrderId == order.Id).ToList()
+		};
+		return View(viewModel);
 
 		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long id);
 		//if (parseResult) {
@@ -63,19 +81,20 @@ public class OrdersController : Controller {
 	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Create([Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] Order order) {
-		if (ModelState.IsValid) {
-			_context.Add(order);
-			await _context.SaveChangesAsync();
-			return RedirectToAction(nameof(Index));
-		}
-		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
-		return View(order);
+	public async Task<IActionResult> Create(OrderViewModel viewModel) {
+		//if (ModelState.IsValid) {
+		//	_context.Add(order);
+		//	await _context.SaveChangesAsync();
+		//	return RedirectToAction(nameof(Index));
+		//}
+		//ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		//return View(order);
 
 		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long userId);
 		//Order newOrder = new() {
 		//	CoffeeUserId = userId
 		//};
+
 		//order.Items ??= new List<OrderItem>();
 
 		//// Minstens 1 product gekozen (qty > 0)
@@ -97,46 +116,66 @@ public class OrdersController : Controller {
 		//	return View(order);
 		//}
 
-		//var catalogById = _context.Coffees.ToDictionary(x => x.Id, x => x);
+		//var orderItems = _context.OrderItems.Where(orderItem => orderItem.OrderId == order.Id);
+		decimal total = 0;
+		var size = viewModel.Items.Count;
 
-		//var lines = order.Items
-		//	 .Where(i => i.Quantity > 0)
-		//	 .Select(i => {
-		//		 if (!catalogById.TryGetValue(i.CoffeeId, out var product))
-		//			 throw new Exception($"Onbekend product: {i.CoffeeId}");
+		if (!ModelState.IsValid) {
+			return View(nameof(Index));
+		}
 
-		//		 var qty = i.Quantity;
-		//		 var lineTotal = product.Price * qty;
+		var myvar = viewModel.Items;
 
-		//		 return new OrderLine(Guid.NewGuid().ToString(), product.Id, product.Name.ToString(), product.Price, qty, lineTotal);
-		//	 })
-		//	 .ToList();
+		foreach (OrderItem item in viewModel.Items) {
+			//total += (item.UnitPrice * item.Quantity);
+			var message = new OrderDTO(
+				viewModel.CoffeeUserId,
+				viewModel.OrderId,
+				item.CoffeeId,
+				item.Coffee.Type,
+				item.Quantity,
+				item.UnitPrice
+			);
+			var rabbit = _configuration.GetSection("RabbitMQConfig");
 
-		//var total = lines.Sum(l => l.LineTotal);
-		//var address = _context.Addresses.First(addr => addr.CoffeeUserId == order.CoffeeUser.Id);
+			var scheme = rabbit["Scheme"];
+			var host = rabbit["Host"];
+			var vhost = rabbit["VirtualHost"] ?? "/";
+			var port = rabbit.GetValue<int?>("Port:Cluster") ?? 5672;
 
-		//var message = new OrderSubmitted(
-		//	 Guid.NewGuid().ToString(),
-		//	 order.CoffeeUser.FirstName,
-		//	 order.CoffeeUser.LastName,
-		//	 order.CoffeeUser.Email,
+			// Build URI: vhost "/" -> no path, otherwise "/<vhost>"
+			var vhostPath = (string.IsNullOrWhiteSpace(vhost) || vhost == "/")
+				? string.Empty
+				: "/" + vhost.TrimStart('/');
 
-		//	 address.Type.ToString(),
-		//	 address.Street,
-		//	 address.HouseNumber,
-		//	 address.City,
-		//	 address.PostalCode,
-		//	 address.CountryISO,
-		//	 address.UnitNumber,
+			var uri = new Uri($"{scheme}://{host}:{port}{vhostPath}/OrderSubmitted");
 
-		//	 total,
-		//	 lines
-		//);
-
-		//await _publish.Publish(message);
+			var endpoint = await _sendEndpointProvider.GetSendEndpoint(uri);
+			await endpoint.Send(message);
+		}
 
 		//TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-		//return RedirectToAction(nameof(Create));
+		return RedirectToAction(nameof(Create));
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> AddOrderItem([FromBody] OrderItem posted, int index) {
+		if (!ModelState.IsValid) {
+			// This will return the exact field names and reasons they failed
+			return BadRequest(ModelState);
+		}
+
+		if (posted == null)
+			return BadRequest();
+
+		// Pass the index to the partial via ViewData
+		ViewData["Index"] = index;
+
+		// In a real app, you might save this to a Session or database
+		// For dynamic UI, often we return a Partial View of the new row
+		//return View(nameof(Create), viewModel);
+		return PartialView("_OrderItemRow", posted);
 	}
 
 	// GET: Orders/Edit/5
