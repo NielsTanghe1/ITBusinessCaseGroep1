@@ -390,6 +390,50 @@
 			});
 		}
 
+		/* ============================
+		   TOEGEVOEGD (MINIMAAL) - FIX
+		   ============================ */
+
+		function updateTotal() {
+			let total = 0;
+
+			cart.forEach((item) => {
+				const qty = parseInt(item.quantityInput?.value || "0");
+				if (qty > 0) total += qty * parseFloat(item.price);
+			});
+
+			const value = total.toFixed(2);
+			const el1 = document.getElementById("cartTotal");
+			const el2 = document.getElementById("cartTotal2");
+			if (el1) el1.innerText = value;
+			if (el2) el2.innerText = value;
+		}
+
+		function updateBadge() {
+			const badge = document.getElementById("cartBadge");
+			if (!badge) return;
+
+			let count = 0;
+			cart.forEach((item) => {
+				const qty = parseInt(item.quantityInput?.value || "0");
+				if (qty > 0) count += qty; // totaal aantal units
+			});
+
+			badge.innerText = count.toString();
+			badge.style.display = count > 0 ? "inline-block" : "none";
+		}
+
+		function renderVisibleList() {
+			// Toon/verberg "leeg" status op basis van items met qty > 0
+			let hasAny = false;
+			cart.forEach((item) => {
+				const qty = parseInt(item.quantityInput?.value || "0");
+				if (qty > 0) hasAny = true;
+			});
+
+			if (empty) empty.style.display = hasAny ? "none" : "block";
+		}
+
 		function escapeHtml(str) {
 			return (str ?? "")
 				.toString()
@@ -443,3 +487,4 @@
 		renderCart();
 	</script>
 }
+

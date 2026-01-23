@@ -104,17 +104,17 @@ public class OrdersController : Controller {
 		foreach (OrderItem item in viewModel.Items) {
 			// Load Coffee from database using CoffeeId
 			var coffee = await _context.Coffees.FindAsync(item.CoffeeId);
-			
+
 			if (coffee == null) {
 				ModelState.AddModelError("", $"Coffee with ID {item.CoffeeId} not found.");
 				continue;
 			}
-			
+
 			// Create OrderItem in database to get unique ID
 			item.OrderId = order.Id;
 			_context.OrderItems.Add(item);
 			await _context.SaveChangesAsync(); // This generates the OrderItem ID
-			
+
 			var message = new OrderDTO(
 				viewModel.CoffeeUserId,
 				item.Id, // Use the unique OrderItem ID instead of Order ID
@@ -123,7 +123,7 @@ public class OrdersController : Controller {
 				item.Quantity,
 				item.UnitPrice
 			);
-			
+
 			var rabbit = _configuration.GetSection("RabbitMQConfig");
 
 			var host = rabbit["Host"];
@@ -139,12 +139,14 @@ public class OrdersController : Controller {
 
 			var endpoint = await _sendEndpointProvider.GetSendEndpoint(uri);
 			await endpoint.Send(message);
-			
+
 			total += item.Quantity * item.UnitPrice;
 		}
 
 		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-		return RedirectToAction(nameof(Index));
+
+		// ✅ CHANGED: stay on /Orders/Create instead of going to /Orders (Index)
+		return RedirectToAction(nameof(Create));
 	}
 
 	[HttpPost]
