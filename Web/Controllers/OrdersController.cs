@@ -82,63 +82,50 @@ public class OrdersController : Controller {
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Create(OrderViewModel viewModel) {
-		//if (ModelState.IsValid) {
-		//	_context.Add(order);
-		//	await _context.SaveChangesAsync();
-		//	return RedirectToAction(nameof(Index));
-		//}
-		//ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
-		//return View(order);
-
-		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long userId);
-		//Order newOrder = new() {
-		//	CoffeeUserId = userId
-		//};
-
-		//order.Items ??= new List<OrderItem>();
-
-		//// Minstens 1 product gekozen (qty > 0)
-		//if (!order.Items.Any(i => i.Quantity > 0))
-		//	ModelState.AddModelError("", "Kies minstens één product en zet het aantal groter dan 0.");
-
-		//if (!ModelState.IsValid) {
-		//	// Zorg dat alle items er blijven instaan (voor de view)
-		//	if (order.Items.Count == 0) {
-		//		order.Items = _context.Coffees
-		//			.Select(coffee => new OrderItem {
-		//				OrderId = newOrder.Id,
-		//				CoffeeId = coffee.Id,
-		//				Quantity = 0,
-		//				UnitPrice = coffee.Price
-		//			})
-		//			.ToList();
-		//	}
-		//	return View(order);
-		//}
-
-		//var orderItems = _context.OrderItems.Where(orderItem => orderItem.OrderId == order.Id);
 		decimal total = 0;
 		var size = viewModel.Items.Count;
 
 		if (!ModelState.IsValid) {
-			return View(nameof(Index));
+			// Return the form with validation errors
+			ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+			ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
+			ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
+			return View(viewModel);
 		}
 
-		var myvar = viewModel.Items;
+		// Create the order in the database first
+		var order = new Order {
+			CoffeeUserId = viewModel.CoffeeUserId,
+			Status = StatusType.Pending,
+		};
+		_context.Orders.Add(order);
+		await _context.SaveChangesAsync(); // This generates the Order ID
 
 		foreach (OrderItem item in viewModel.Items) {
-			//total += (item.UnitPrice * item.Quantity);
+			// Load Coffee from database using CoffeeId
+			var coffee = await _context.Coffees.FindAsync(item.CoffeeId);
+			
+			if (coffee == null) {
+				ModelState.AddModelError("", $"Coffee with ID {item.CoffeeId} not found.");
+				continue;
+			}
+			
+			// Create OrderItem in database to get unique ID
+			item.OrderId = order.Id;
+			_context.OrderItems.Add(item);
+			await _context.SaveChangesAsync(); // This generates the OrderItem ID
+			
 			var message = new OrderDTO(
 				viewModel.CoffeeUserId,
-				viewModel.OrderId,
+				item.Id, // Use the unique OrderItem ID instead of Order ID
 				item.CoffeeId,
-				item.Coffee.Type,
+				coffee.Type,
 				item.Quantity,
 				item.UnitPrice
 			);
+			
 			var rabbit = _configuration.GetSection("RabbitMQConfig");
 
-			var scheme = rabbit["Scheme"];
 			var host = rabbit["Host"];
 			var vhost = rabbit["VirtualHost"] ?? "/";
 			var port = rabbit.GetValue<int?>("Port:Cluster") ?? 5672;
@@ -148,14 +135,16 @@ public class OrdersController : Controller {
 				? string.Empty
 				: "/" + vhost.TrimStart('/');
 
-			var uri = new Uri($"{scheme}://{host}:{port}{vhostPath}/OrderSubmitted");
+			var uri = new Uri($"rabbitmq://{host}:{port}{vhostPath}/OrderSubmitted");
 
 			var endpoint = await _sendEndpointProvider.GetSendEndpoint(uri);
 			await endpoint.Send(message);
+			
+			total += item.Quantity * item.UnitPrice;
 		}
 
-		//TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-		return RedirectToAction(nameof(Create));
+		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
+		return RedirectToAction(nameof(Index));
 	}
 
 	[HttpPost]

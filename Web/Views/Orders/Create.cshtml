@@ -57,8 +57,8 @@
 			<!-- Hidden inputs die model binding doen -->
 			<input type="hidden" asp-for="CoffeeUserId" />
 			<input type="hidden" asp-for="OrderId" />
-			<input type="hidden" asp-for="Items" />
-			@* <input type="hidden" asp-for="QuantityDictionary" /> *@
+			<!-- Replace the single Items hidden input with a container for dynamic binding -->
+			<div id="itemsContainer"></div>
 
 			<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
 				<h5 class="fw-semibold mb-0">Producten (per unit)</h5>
@@ -359,47 +359,35 @@
 		}
 
 		function renderCart() {
-			let totalQuantityAll = 0;
-			let totalPrice = 0;
+			updateBadge();
+			updateTotal();
+			renderVisibleList();
+			
+			// NEW: Populate hidden inputs for model binding
+			populateItemsForSubmit();
+		}
 
-			for (const [key, item] of cart.entries()) {
-				const selectorValue = parseInt(item.selector.value || "0");
-
-				const label = document.querySelector(`[name="inCart_${key}"]`);
-				if (label) label.innerText = selectorValue.toString();
-
-				if (!item || selectorValue <= 0) {
-					// Hide card if present
-					if (item?.element && list.contains(item.element)) {
-						list.removeChild(item.element);
-					}
-					continue;
+		// Add this new function
+		function populateItemsForSubmit() {
+			const container = document.getElementById('itemsContainer');
+			container.innerHTML = ''; // Clear existing
+			
+			let index = 0;
+			cart.forEach((item, key) => {
+				const qty = parseInt(item.quantityInput?.value || "0");
+				if (qty > 0) {
+					const coffeeId = item.selector.dataset.coffeeid;
+					
+					// Create properly named inputs for model binding
+					container.innerHTML += `
+						<input type="hidden" name="Items[${index}].CoffeeId" value="${coffeeId}" />
+						<input type="hidden" name="Items[${index}].Quantity" value="${qty}" />
+						<input type="hidden" name="Items[${index}].UnitPrice" value="${item.price}" />
+						<input type="hidden" name="Items[${index}].OrderId" value="${document.querySelector('[name="OrderId"]').value}" />
+					`;
+					index++;
 				}
-
-				totalQuantityAll += selectorValue;
-				totalPrice += selectorValue * item.price;
-
-				if (item.quantityInput) item.quantityInput.value = selectorValue.toString();
-				updateElement(item);
-
-				if (item.element && !document.getElementById(item.element.id)) {
-					list.appendChild(item.element);
-				}
-			}
-
-			empty.style.display = totalQuantityAll === 0 ? "block" : "none";
-
-			const badge = document.getElementById("cartBadge");
-			if (totalQuantityAll > 0) {
-				badge.style.display = "inline-block";
-				badge.innerText = totalQuantityAll.toString();
-			} else {
-				badge.style.display = "none";
-				badge.innerText = "0";
-			}
-
-			document.getElementById("cartTotal").innerText  = totalPrice.toFixed(2);
-			document.getElementById("cartTotal2").innerText = totalPrice.toFixed(2);
+			});
 		}
 
 		function escapeHtml(str) {
