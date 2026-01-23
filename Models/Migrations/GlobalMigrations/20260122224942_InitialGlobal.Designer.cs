@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Models.Data;
 
 #nullable disable
 
-namespace Models.Migrations
+namespace Models.Migrations.GlobalMigrations
 {
-    [DbContext(typeof(LocalDbContext))]
-    partial class LocalDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(GlobalDbContext))]
+    [Migration("20260122224942_InitialGlobal")]
+    partial class InitialGlobal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,7 +158,7 @@ namespace Models.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.AddressDTO", b =>
+            modelBuilder.Entity("Models.Entities.Address", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -183,9 +186,6 @@ namespace Models.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("HouseNumber")
                         .HasColumnType("int");
 
@@ -209,10 +209,12 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Addresses", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.CoffeeDTO", b =>
+            modelBuilder.Entity("Models.Entities.Coffee", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -227,9 +229,6 @@ namespace Models.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -243,10 +242,10 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Coffees", (string)null);
+                    b.ToTable("Coffees");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.CoffeeUserDTO", b =>
+            modelBuilder.Entity("Models.Entities.CoffeeUser", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -279,9 +278,6 @@ namespace Models.Migrations
                         .IsRequired()
                         .HasMaxLength(35)
                         .HasColumnType("nvarchar(35)");
-
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -323,6 +319,10 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("[Email] IS NOT NULL");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -334,7 +334,7 @@ namespace Models.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.OrderDTO", b =>
+            modelBuilder.Entity("Models.Entities.Order", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -352,19 +352,18 @@ namespace Models.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.OrderItemDTO", b =>
+            modelBuilder.Entity("Models.Entities.OrderItem", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -382,9 +381,6 @@ namespace Models.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
@@ -396,10 +392,14 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.HasIndex("CoffeeId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.PaymentDetailDTO", b =>
+            modelBuilder.Entity("Models.Entities.PaymentDetail", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -425,9 +425,6 @@ namespace Models.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<long>("GlobalId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("LastFour")
                         .IsRequired()
                         .HasMaxLength(4)
@@ -435,7 +432,9 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentDetails", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("PaymentDetails");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
@@ -449,7 +448,7 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -458,7 +457,7 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -473,7 +472,7 @@ namespace Models.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -482,11 +481,63 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Models.Entities.Address", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
+                });
+
+            modelBuilder.Entity("Models.Entities.Order", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
+                });
+
+            modelBuilder.Entity("Models.Entities.OrderItem", b =>
+                {
+                    b.HasOne("Models.Entities.Coffee", "Coffee")
+                        .WithMany()
+                        .HasForeignKey("CoffeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coffee");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Models.Entities.PaymentDetail", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
                 });
 #pragma warning restore 612, 618
         }

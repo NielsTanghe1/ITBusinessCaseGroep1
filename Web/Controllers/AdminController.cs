@@ -11,31 +11,29 @@ namespace Web.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller {
-	private readonly UserManager<CoffeeUser> _userManager;
+	// 1. Change Injection Type to CoffeeUserDTO
+	private readonly UserManager<CoffeeUserDTO> _userManager;
 	private readonly RoleManager<IdentityRole<long>> _roleManager;
 	private readonly LocalDbContext _db;
 
 	public AdminController(
-		 UserManager<CoffeeUser> userManager,
-		 RoleManager<IdentityRole<long>> roleManager,
-		 LocalDbContext db) {
+		  UserManager<CoffeeUserDTO> userManager, // 2. Update Constructor
+		  RoleManager<IdentityRole<long>> roleManager,
+		  LocalDbContext db) {
 		_userManager = userManager;
 		_roleManager = roleManager;
 		_db = db;
 	}
 
-	// Dashboard
 	public IActionResult Index() => View();
 
-	// -------------------
-	// USERS
-	// -------------------
 	public async Task<IActionResult> Users() {
 		var users = await _userManager.Users
-			 .OrderBy(u => u.Email)
-			 .ToListAsync();
+			  .OrderBy(u => u.Email)
+			  .ToListAsync();
 
-		var vm = new List<(CoffeeUser user, IList<string> roles)>();
+		// 3. Update Tuple type to use CoffeeUserDTO
+		var vm = new List<(CoffeeUserDTO user, IList<string> roles)>();
 		foreach (var u in users)
 			vm.Add((u, await _userManager.GetRolesAsync(u)));
 
@@ -50,12 +48,14 @@ public class AdminController : Controller {
 		if (!ModelState.IsValid)
 			return View(model);
 
-		var user = new CoffeeUser {
+		// 4. Instantiate CoffeeUserDTO instead of CoffeeUser
+		var user = new CoffeeUserDTO {
 			FirstName = model.FirstName,
 			LastName = model.LastName,
 			UserName = model.Email,
 			Email = model.Email,
-			EmailConfirmed = true
+			EmailConfirmed = true,
+			GlobalId = Random.Shared.NextInt64() // Generate a GlobalId
 		};
 
 		var result = await _userManager.CreateAsync(user, model.Password);
@@ -125,30 +125,6 @@ public class AdminController : Controller {
 	// ORDERS (LIST)
 	// -------------------
 	public async Task<IActionResult> Orders() {
-		//var orders = await _db.Orders
-		//	 .OrderByDescending(o => o.CreatedAt)
-		//	 .ToListAsync();
-
-		//var list = orders.Select(o =>
-		//{
-		//	var parsed = new OrderDTO() {
-		//		CoffeeUserId = o.CoffeeUserId,
-		//		OrderId = o.Id,
-		//		CoffeeId = o.
-		//	};
-
-		//	return new AdminOrderListItemVm {
-		//		Id = o.Id,
-		//		OrderId = o.OrderId,
-		//		Status = o.Status,
-		//		CreatedAtUtc = o.CreatedAtUtc,
-		//		FullName = parsed != null ? $"{parsed.FirstName} {parsed.LastName}".Trim() : "(onbekend)",
-		//		Email = parsed?.Email ?? "(onbekend)",
-		//		Total = parsed?.Total
-		//	};
-		//}).ToList();
-
-		//return View(list);
 		return Ok();
 	}
 
@@ -156,22 +132,6 @@ public class AdminController : Controller {
 	// ORDERS (DETAILS)
 	// -------------------
 	public async Task<IActionResult> OrderDetails(int id) {
-		//var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
-		//if (order == null)
-		//	return NotFound();
-
-		//var parsed = TryParseOrder(order.PayloadJson);
-
-		//var vm = new AdminOrderDetailsVm {
-		//	Id = order.Id,
-		//	OrderId = order.OrderId,
-		//	Status = order.Status,
-		//	CreatedAtUtc = order.CreatedAtUtc,
-		//	RawJson = order.PayloadJson,
-		//	Payload = parsed
-		//};
-
-		//return View(vm);
 		return Ok();
 	}
 
@@ -198,7 +158,6 @@ public class CreateUserViewModel {
 	}
 }
 
-// ---------- ViewModels ----------
 public class AdminOrderListItemViewModel {
 	public int Id {
 		get; set;
@@ -230,7 +189,7 @@ public class AdminOrderDetailsViewModel {
 	}
 }
 
-// ---------- DTOs (matcht jouw JSON uit screenshot) ----------
+// Fixed DTO to use OrderLineJsonDto instead of OrderDTO (which is now an Entity)
 public class OrderSubmittedDto {
 	public string? OrderId {
 		get; set;
@@ -264,7 +223,27 @@ public class OrderSubmittedDto {
 	public decimal? Total {
 		get; set;
 	}
-	public List<OrderDTO>? Lines {
+	public List<OrderLineJsonDto>? Lines {
+		get; set;
+	}
+}
+
+// New class to represent the line items in the JSON payload
+public class OrderLineJsonDto {
+	public long CoffeeUserId {
+		get; set;
+	}
+	public long OrderId {
+		get; set;
+	}
+	public long CoffeeId {
+		get; set;
+	}
+	public string CoffeeType { get; set; } = "";
+	public int Quantity {
+		get; set;
+	}
+	public decimal UnitPrice {
 		get; set;
 	}
 }

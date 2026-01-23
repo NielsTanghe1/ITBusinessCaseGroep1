@@ -1,12 +1,10 @@
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.DTO;
 using Web.Services;
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
@@ -39,17 +37,18 @@ builder.Services.AddDbContext<GlobalDbContext>(options =>
 
 // Identity system
 builder.Services
-	.AddIdentity<CoffeeUser, IdentityRole<long>>(options => {
-		options.Password.RequireDigit = false;
-		options.Password.RequireLowercase = false;
-		options.Password.RequireNonAlphanumeric = false;
-		options.Password.RequireUppercase = false;
-		options.Password.RequiredLength = 3;
-		options.Password.RequiredUniqueChars = 1;
-		options.User.RequireUniqueEmail = true;
-		options.SignIn.RequireConfirmedAccount = false;
-	})
-	.AddEntityFrameworkStores<LocalDbContext>();
+	 // CHANGE CoffeeUser TO CoffeeUserDTO HERE:
+	 .AddIdentity<CoffeeUserDTO, IdentityRole<long>>(options => {
+		 options.Password.RequireDigit = false;
+		 options.Password.RequireLowercase = false;
+		 options.Password.RequireNonAlphanumeric = false;
+		 options.Password.RequireUppercase = false;
+		 options.Password.RequiredLength = 3;
+		 options.Password.RequiredUniqueChars = 1;
+		 options.User.RequireUniqueEmail = true;
+		 options.SignIn.RequireConfirmedAccount = false;
+	 })
+	 .AddEntityFrameworkStores<LocalDbContext>();
 
 // MVC
 builder.Services.AddControllersWithViews();

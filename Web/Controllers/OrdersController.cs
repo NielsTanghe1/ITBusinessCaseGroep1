@@ -4,195 +4,170 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.DTO; // Required
 using Models.Entities.Enums;
 using Web.Services;
 
 namespace Web.Controllers;
 
 public class OrdersController : Controller {
-	private readonly LocalDbContext _context;
+	private readonly LocalDbContext _localContext;
+	private readonly GlobalDbContext _globalContext; // Global Context for sync
 	private readonly Utilities _utilities;
 	private readonly IPublishEndpoint _publish;
 
-	public OrdersController(LocalDbContext context, Utilities utilities, IPublishEndpoint publish) {
-		_context = context;
+	public OrdersController(LocalDbContext localContext, GlobalDbContext globalContext, Utilities utilities, IPublishEndpoint publish) {
+		_localContext = localContext;
+		_globalContext = globalContext;
 		_utilities = utilities;
 		_publish = publish;
 	}
 
 	// GET: Orders
 	public async Task<IActionResult> Index() {
-		var localDbContext = _context.Orders.Include(o => o.CoffeeUser);
-		return View(await localDbContext.ToListAsync());
+		// Now works because OrderDTO shadows the CoffeeUser property
+		var orders = await _localContext.Orders.Include(o => o.CoffeeUser).ToListAsync();
+		return View(orders);
 	}
 
 	// GET: Orders/Details/5
 	public async Task<IActionResult> Details(long? id) {
-		if (id == null) {
+		if (id == null)
 			return NotFound();
-		}
 
-		var order = await _context.Orders
-			 .Include(o => o.CoffeeUser)
-			 .FirstOrDefaultAsync(m => m.Id == id);
-		if (order == null) {
+		var order = await _localContext.Orders
+			  .Include(o => o.CoffeeUser)
+			  .FirstOrDefaultAsync(m => m.Id == id);
+
+		if (order == null)
 			return NotFound();
-		}
 
 		return View(order);
 	}
 
 	// GET: Orders/Create
 	public IActionResult Create() {
-		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName");
+		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName");
 		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 		return View();
-
-		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long id);
-		//if (parseResult) {
-		//	return View(new OrderViewModel {
-		//		CoffeeUser = _context.Users.Find(id),
-		//		Address = _context.Addresses.Find(id)
-		//	});
-		//}
-		//return View();
 	}
 
 	// POST: Orders/Create
-	// To protect from overposting attacks, enable the specific properties you want to bind to.
-	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Create([Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] Order order) {
+	// 1. REMOVED CreatedAt and DeletedAt from the Bind list
+	public async Task<IActionResult> Create([Bind("Id,CoffeeUserId,Status")] OrderDTO orderDto) {
 		if (ModelState.IsValid) {
-			_context.Add(order);
-			await _context.SaveChangesAsync();
+			// 2. Ensure CreatedAt is set (though the class default handles this, it's safe to be explicit)
+			orderDto.CreatedAt = DateTime.UtcNow;
+
+			// 3. Prepare Local Data
+			if (orderDto.GlobalId == 0)
+				orderDto.GlobalId = Random.Shared.NextInt64();
+
+			_localContext.Add(orderDto);
+			await _localContext.SaveChangesAsync();
+
+			// 4. Sync to Global Database
+			try {
+				var localUser = await _localContext.Users.AsNoTracking()
+					  .FirstOrDefaultAsync(u => u.Id == orderDto.CoffeeUserId);
+
+				if (localUser != null) {
+					var globalUser = await _globalContext.Users
+						  .FirstOrDefaultAsync(u => u.GlobalId == localUser.GlobalId || u.Email == localUser.Email);
+
+					if (globalUser == null) {
+						globalUser = new CoffeeUser {
+							GlobalId = localUser.GlobalId,
+							UserName = localUser.UserName,
+							Email = localUser.Email,
+							FirstName = localUser.FirstName,
+							LastName = localUser.LastName,
+							EmailConfirmed = localUser.EmailConfirmed,
+							PhoneNumber = localUser.PhoneNumber,
+							CreatedAt = localUser.CreatedAt
+						};
+						_globalContext.Users.Add(globalUser);
+						await _globalContext.SaveChangesAsync();
+					}
+
+					var globalOrder = new Order {
+						GlobalId = orderDto.GlobalId,
+						CoffeeUserId = globalUser.Id, // Use the GLOBAL ID
+						Status = orderDto.Status,
+						CreatedAt = orderDto.CreatedAt,
+						DeletedAt = orderDto.DeletedAt
+					};
+
+					_globalContext.Orders.Add(globalOrder);
+					await _globalContext.SaveChangesAsync();
+				}
+			} catch (Exception ex) {
+				Console.WriteLine($"SYNC ERROR: {ex.Message}");
+			}
+
 			return RedirectToAction(nameof(Index));
 		}
-		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
-		return View(order);
 
-		//bool parseResult = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long userId);
-		//Order newOrder = new() {
-		//	CoffeeUserId = userId
-		//};
-		//order.Items ??= new List<OrderItem>();
+		// If we get here, something is invalid.
+		// This will help you see WHY it failed if it happens again:
+		var errors = ModelState.Values.SelectMany(v => v.Errors);
+		foreach (var error in errors) {
+			Console.WriteLine($"Validation Error: {error.ErrorMessage}");
+		}
 
-		//// Minstens 1 product gekozen (qty > 0)
-		//if (!order.Items.Any(i => i.Quantity > 0))
-		//	ModelState.AddModelError("", "Kies minstens één product en zet het aantal groter dan 0.");
-
-		//if (!ModelState.IsValid) {
-		//	// Zorg dat alle items er blijven instaan (voor de view)
-		//	if (order.Items.Count == 0) {
-		//		order.Items = _context.Coffees
-		//			.Select(coffee => new OrderItem {
-		//				OrderId = newOrder.Id,
-		//				CoffeeId = coffee.Id,
-		//				Quantity = 0,
-		//				UnitPrice = coffee.Price
-		//			})
-		//			.ToList();
-		//	}
-		//	return View(order);
-		//}
-
-		//var catalogById = _context.Coffees.ToDictionary(x => x.Id, x => x);
-
-		//var lines = order.Items
-		//	 .Where(i => i.Quantity > 0)
-		//	 .Select(i => {
-		//		 if (!catalogById.TryGetValue(i.CoffeeId, out var product))
-		//			 throw new Exception($"Onbekend product: {i.CoffeeId}");
-
-		//		 var qty = i.Quantity;
-		//		 var lineTotal = product.Price * qty;
-
-		//		 return new OrderLine(Guid.NewGuid().ToString(), product.Id, product.Name.ToString(), product.Price, qty, lineTotal);
-		//	 })
-		//	 .ToList();
-
-		//var total = lines.Sum(l => l.LineTotal);
-		//var address = _context.Addresses.First(addr => addr.CoffeeUserId == order.CoffeeUser.Id);
-
-		//var message = new OrderSubmitted(
-		//	 Guid.NewGuid().ToString(),
-		//	 order.CoffeeUser.FirstName,
-		//	 order.CoffeeUser.LastName,
-		//	 order.CoffeeUser.Email,
-
-		//	 address.Type.ToString(),
-		//	 address.Street,
-		//	 address.HouseNumber,
-		//	 address.City,
-		//	 address.PostalCode,
-		//	 address.CountryISO,
-		//	 address.UnitNumber,
-
-		//	 total,
-		//	 lines
-		//);
-
-		//await _publish.Publish(message);
-
-		//TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-		//return RedirectToAction(nameof(Create));
+		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName", orderDto.CoffeeUserId);
+		return View(orderDto);
 	}
 
 	// GET: Orders/Edit/5
 	public async Task<IActionResult> Edit(long? id) {
-		if (id == null) {
+		if (id == null)
 			return NotFound();
-		}
 
-		var order = await _context.Orders.FindAsync(id);
-		if (order == null) {
+		var order = await _localContext.Orders.FindAsync(id);
+		if (order == null)
 			return NotFound();
-		}
-		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+
+		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName", order.CoffeeUserId);
 		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 		return View(order);
 	}
 
 	// POST: Orders/Edit/5
-	// To protect from overposting attacks, enable the specific properties you want to bind to.
-	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Edit(long id, [Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] Order order) {
-		if (id != order.Id) {
+	public async Task<IActionResult> Edit(long id, [Bind("Id,CoffeeUserId,Status,CreatedAt,DeletedAt")] OrderDTO order) {
+		if (id != order.Id)
 			return NotFound();
-		}
 
 		if (ModelState.IsValid) {
 			try {
-				_context.Update(order);
-				await _context.SaveChangesAsync();
+				_localContext.Update(order);
+				await _localContext.SaveChangesAsync();
 			} catch (DbUpdateConcurrencyException) {
-				if (!OrderExists(order.Id)) {
+				if (!OrderExists(order.Id))
 					return NotFound();
-				} else {
+				else
 					throw;
-				}
 			}
 			return RedirectToAction(nameof(Index));
 		}
-		ViewData["CoffeeUserId"] = new SelectList(_context.Users, "Id", "FirstName", order.CoffeeUserId);
+		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName", order.CoffeeUserId);
 		return View(order);
 	}
 
 	// GET: Orders/Delete/5
 	public async Task<IActionResult> Delete(long? id) {
-		if (id == null) {
+		if (id == null)
 			return NotFound();
-		}
 
-		var order = await _context.Orders
-			 .Include(o => o.CoffeeUser)
-			 .FirstOrDefaultAsync(m => m.Id == id);
-		if (order == null) {
+		var order = await _localContext.Orders
+			  .Include(o => o.CoffeeUser)
+			  .FirstOrDefaultAsync(m => m.Id == id);
+		if (order == null)
 			return NotFound();
-		}
 
 		return View(order);
 	}
@@ -201,16 +176,16 @@ public class OrdersController : Controller {
 	[HttpPost, ActionName("Delete")]
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> DeleteConfirmed(long id) {
-		var order = await _context.Orders.FindAsync(id);
+		var order = await _localContext.Orders.FindAsync(id);
 		if (order != null) {
-			_context.Orders.Remove(order);
+			_localContext.Orders.Remove(order);
 		}
 
-		await _context.SaveChangesAsync();
+		await _localContext.SaveChangesAsync();
 		return RedirectToAction(nameof(Index));
 	}
 
 	private bool OrderExists(long id) {
-		return _context.Orders.Any(e => e.Id == id);
+		return _localContext.Orders.Any(e => e.Id == id);
 	}
 }

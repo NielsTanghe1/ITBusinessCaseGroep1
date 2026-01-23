@@ -9,11 +9,11 @@ using Models.Data;
 
 #nullable disable
 
-namespace Models.Migrations
+namespace Models.Migrations.GlobalMigrations
 {
-    [DbContext(typeof(LocalDbContext))]
-    [Migration("20260121144624_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(GlobalDbContext))]
+    [Migration("20260122230324_AddGlobalIdToBase")]
+    partial class AddGlobalIdToBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -186,6 +186,9 @@ namespace Models.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("HouseNumber")
                         .HasColumnType("int");
 
@@ -228,6 +231,9 @@ namespace Models.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -279,6 +285,9 @@ namespace Models.Migrations
                         .HasMaxLength(35)
                         .HasColumnType("nvarchar(35)");
 
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(35)
@@ -302,7 +311,7 @@ namespace Models.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
@@ -331,10 +340,6 @@ namespace Models.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.HasIndex("PhoneNumber")
-                        .IsUnique()
-                        .HasFilter("[PhoneNumber] IS NOT NULL");
-
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
@@ -355,6 +360,9 @@ namespace Models.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -384,6 +392,9 @@ namespace Models.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
@@ -428,6 +439,9 @@ namespace Models.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("GlobalId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("LastFour")
                         .IsRequired()

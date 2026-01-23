@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
-using Models.Entities;
+using Models.Entities.DTO; // Added namespace
 
 namespace Web.Controllers;
 
@@ -24,7 +24,7 @@ public class CoffeeUsersController : Controller {
 		}
 
 		var coffeeUser = await _context.Users
-			 .FirstOrDefaultAsync(m => m.Id == id);
+			  .FirstOrDefaultAsync(m => m.Id == id);
 		if (coffeeUser == null) {
 			return NotFound();
 		}
@@ -38,12 +38,14 @@ public class CoffeeUsersController : Controller {
 	}
 
 	// POST: CoffeeUsers/Create
-	// To protect from overposting attacks, enable the specific properties you want to bind to.
-	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Create([Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUser coffeeUser) {
+	// Changed parameter to CoffeeUserDTO
+	public async Task<IActionResult> Create([Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUserDTO coffeeUser) {
 		if (ModelState.IsValid) {
+			// Ensure GlobalId is set
+			coffeeUser.GlobalId = Random.Shared.NextInt64();
+
 			_context.Add(coffeeUser);
 			await _context.SaveChangesAsync();
 			return RedirectToAction(nameof(Index));
@@ -65,11 +67,10 @@ public class CoffeeUsersController : Controller {
 	}
 
 	// POST: CoffeeUsers/Edit/5
-	// To protect from overposting attacks, enable the specific properties you want to bind to.
-	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Edit(long id, [Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUser coffeeUser) {
+	// Changed parameter to CoffeeUserDTO
+	public async Task<IActionResult> Edit(long id, [Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUserDTO coffeeUser) {
 		if (id != coffeeUser.Id) {
 			return NotFound();
 		}
@@ -97,7 +98,7 @@ public class CoffeeUsersController : Controller {
 		}
 
 		var coffeeUser = await _context.Users
-			 .FirstOrDefaultAsync(m => m.Id == id);
+			  .FirstOrDefaultAsync(m => m.Id == id);
 		if (coffeeUser == null) {
 			return NotFound();
 		}

@@ -8,10 +8,10 @@ using Models.Data;
 
 #nullable disable
 
-namespace Models.Migrations
+namespace Models.Migrations.GlobalMigrations
 {
-    [DbContext(typeof(LocalDbContext))]
-    partial class LocalDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(GlobalDbContext))]
+    partial class GlobalDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -155,7 +155,7 @@ namespace Models.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.AddressDTO", b =>
+            modelBuilder.Entity("Models.Entities.Address", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -209,10 +209,12 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Addresses", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.CoffeeDTO", b =>
+            modelBuilder.Entity("Models.Entities.Coffee", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -243,10 +245,10 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Coffees", (string)null);
+                    b.ToTable("Coffees");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.CoffeeUserDTO", b =>
+            modelBuilder.Entity("Models.Entities.CoffeeUser", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -323,6 +325,10 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("[Email] IS NOT NULL");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -334,7 +340,7 @@ namespace Models.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.OrderDTO", b =>
+            modelBuilder.Entity("Models.Entities.Order", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -361,10 +367,12 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.OrderItemDTO", b =>
+            modelBuilder.Entity("Models.Entities.OrderItem", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -396,10 +404,14 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.HasIndex("CoffeeId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Models.Entities.DTO.PaymentDetailDTO", b =>
+            modelBuilder.Entity("Models.Entities.PaymentDetail", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -435,7 +447,9 @@ namespace Models.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentDetails", (string)null);
+                    b.HasIndex("CoffeeUserId");
+
+                    b.ToTable("PaymentDetails");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>", b =>
@@ -449,7 +463,7 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -458,7 +472,7 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -473,7 +487,7 @@ namespace Models.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -482,11 +496,63 @@ namespace Models.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<long>", b =>
                 {
-                    b.HasOne("Models.Entities.DTO.CoffeeUserDTO", null)
+                    b.HasOne("Models.Entities.CoffeeUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Models.Entities.Address", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
+                });
+
+            modelBuilder.Entity("Models.Entities.Order", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
+                });
+
+            modelBuilder.Entity("Models.Entities.OrderItem", b =>
+                {
+                    b.HasOne("Models.Entities.Coffee", "Coffee")
+                        .WithMany()
+                        .HasForeignKey("CoffeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coffee");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Models.Entities.PaymentDetail", b =>
+                {
+                    b.HasOne("Models.Entities.CoffeeUser", "CoffeeUser")
+                        .WithMany()
+                        .HasForeignKey("CoffeeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoffeeUser");
                 });
 #pragma warning restore 612, 618
         }

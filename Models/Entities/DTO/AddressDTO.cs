@@ -3,18 +3,12 @@ using Models.Entities;
 
 namespace Models.Entities.DTO;
 
-// MUST inherit from Order
-public class OrderDTO : Order {
-	// New property for Sync
+public class AddressDTO : Address {
 	public long GlobalId {
 		get; set;
 	}
 
-	// Shadow properties to fix the "Include" error
 	public new CoffeeUserDTO? CoffeeUser {
-		get; set;
-	}
-	public new List<OrderItemDTO>? Items {
 		get; set;
 	}
 }
