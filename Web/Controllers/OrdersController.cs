@@ -115,7 +115,7 @@ public class OrdersController : Controller {
 			_context.OrderItems.Add(item);
 			await _context.SaveChangesAsync(); // This generates the OrderItem ID
 
-			var message = new OrderDTO(
+			var message = new OrderRecord(
 				viewModel.CoffeeUserId,
 				item.Id, // Use the unique OrderItem ID instead of Order ID
 				item.CoffeeId,

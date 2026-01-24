@@ -62,52 +62,52 @@ public class Coffee : BaseEntity {
 	/// </returns>
 	public static Coffee[] SeedingData() {
 		return [
-			new Coffee {
+			new() {
 				Name = CoffeeName.Arabica,
 				Type = CoffeeType.Roasted,
 				Price = 14.50m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Robusta,
 				Type = CoffeeType.Roasted,
 				Price = 11.20m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Arabica,
 				Type = CoffeeType.Grounded,
 				Price = 13.75m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Robusta,
 				Type = CoffeeType.Grounded,
 				Price = 10.90m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Arabica,
 				Type = CoffeeType.Raw,
 				Price = 8.40m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Robusta,
 				Type = CoffeeType.Raw,
 				Price = 6.95m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Liberica,
 				Type = CoffeeType.Roasted,
 				Price = 16.80m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Liberica,
 				Type = CoffeeType.Grounded,
 				Price = 15.30m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Excelsa,
 				Type = CoffeeType.Roasted,
 				Price = 17.25m
 			},
-			new Coffee {
+			new() {
 				Name = CoffeeName.Excelsa,
 				Type = CoffeeType.Raw,
 				Price = 9.10m

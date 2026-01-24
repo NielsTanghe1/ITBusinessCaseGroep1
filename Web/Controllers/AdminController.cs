@@ -259,7 +259,7 @@ public class OrderSubmittedDto {
 	public decimal? Total {
 		get; set;
 	}
-	public List<OrderDTO>? Lines {
+	public List<OrderRecord>? Lines {
 		get; set;
 	}
 }

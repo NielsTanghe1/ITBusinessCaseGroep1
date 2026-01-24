@@ -5,6 +5,92 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2] - 2026-01-24
+
+### Fixed
+
+Corrected user/role assignment in LocalDbContext seeding by using tracked users from userManager.
+
+Removed CoffeeUser shadow property override for IdentityUser.Id to align with Identity framework expectations.
+
+Extended "User" role assignment to administrators during seeding.
+
+## [1.10.1] - 2026-01-24
+
+### Fixed
+
+Corrected PaymentDetail property validation and data types:
+- Changed LastFour from int to string to preserve leading zeros.
+- Replaced [Range] annotations with [StringLength] and added 4-digit regex validation for LastFour.
+
+Updated PaymentDetail.SeedingData() to align with property changes.
+
+Generated migrations for both LocalDbContext and GlobalDbContext.
+
+## [1.10.0] - 2026-01-24
+
+### Added
+
+Implemented dual-context architecture with specialized base classes:
+- BaseBackupDbContext: Non-identity context for backup operations with Users/Roles support.
+- BaseIdentityDbContext: Identity-aware successor to previous BaseDbContext.
+
+Enhanced GlobalDbContext with Seeder() as authoritative data source.
+
+Enhanced LocalDbContext with sync capabilities from backup data, including GlobalId tracking for entity synchronization.
+
+Added optional GlobalId property to track source entity IDs across contexts.
+
+Created initial migrations for GlobalDbContext.
+
+### Changed
+
+Updated seeding sequence in Program.cs to populate GlobalDbContext first.
+
+Updated GlobalDbContext to inherit from BaseBackupDbContext.
+
+Updated LocalDbContext to inherit from BaseIdentityDbContext.
+
+Updated entity-DTO mapping extension methods to map GlobalId properties.
+
+### Removed
+
+BaseDbContext.cs (replaced by specialized base classes).
+
+## [1.9.0] - 2026-01-24
+
+### Added
+
+Added entity-DTO mapping extension methods for all main entities (ToDTO(), ToModel(), ToExisting()).
+
+## [1.8.1] - 2026-01-24
+
+### Changed
+
+Updated property access patterns for better developer experience:
+- CoffeeUser.Id now uses new keyword override.
+- All main model Id properties use init instead of private set.
+- BaseEntity/BaseIdentityEntity.CreatedAt now has public setter.
+- Renamed OrderItem.PriceAtPurchase to OrderItem.UnitPrice for clarity.
+
+### Fixed
+
+[Range] annotation localization issues in Coffee and OrderItem by switching from decimal to double (temporary fix).
+
+## [1.8.0] - 2026-01-24
+
+### Added
+
+Created DTO classes for all main entities under `/Models/Entities/DTO/`.
+
+Each DTO inherits from its corresponding entity and overrides relational entity mappings for optimized API responses:
+- AddressDTO
+- CoffeeDTO
+- CoffeeUserDTO
+- OrderDTO
+- OrderItemDTO
+- PaymentDetailDTO
+
 ## [1.7.0] - 2026-01-16
 
 ### Added
@@ -174,6 +260,12 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.10.2]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.2
+[1.10.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.1
+[1.10.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.0
+[1.9.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.9.0
+[1.8.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.1
+[1.8.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.0
 [1.7.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.7.0
 [1.6.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.1
 [1.6.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.0

@@ -11,9 +11,7 @@ using Microsoft.AspNetCore.Localization;
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
 
-// =======================
-// DATABASE + IDENTITY (SQLITE)
-// =======================
+// Database contexts
 builder.Services.AddDbContext<LocalDbContext>(options =>
 	options.UseSqlServer(
 		builder.Configuration.GetConnectionString("LocalDbContextConnection")
@@ -107,6 +105,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope()) {
 	var services = scope.ServiceProvider;
 	try {
+		await GlobalDbContext.Seeder(services);
 		await LocalDbContext.Seeder(services);
 	} catch (Exception ex) {
 		var logger = services.GetRequiredService<ILogger<Program>>();
@@ -114,9 +113,6 @@ using (var scope = app.Services.CreateScope()) {
 	}
 }
 
-// =======================
-// MIDDLEWARE
-// =======================
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
 	app.UseExceptionHandler("/Home/Error");
@@ -124,13 +120,11 @@ if (!app.Environment.IsDevelopment()) {
 	app.UseHsts();
 }
 
-// ✅ Nodig voor wwwroot/images/css/js
-app.UseStaticFiles();
-
 // Als je enkel HTTP gebruikt, laat deze uit
 // app.UseHttpsRedirection();
-
+app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
