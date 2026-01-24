@@ -13,6 +13,15 @@ namespace Models.Entities;
 /// </remarks>
 public class CoffeeUser : BaseIdentityEntity {
 	/// <summary>
+	/// Gets or sets the primary key for this entity.
+	/// </summary>
+	[Key]
+	[Display(Name = "CoffeeUserId")]
+	public new long Id {
+		get; init;
+	}
+
+	/// <summary>
 	/// Gets or sets the first name of this entity.
 	/// </summary>
 	[StringLength(35, MinimumLength = 2)]

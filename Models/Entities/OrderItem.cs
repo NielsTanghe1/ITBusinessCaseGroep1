@@ -21,7 +21,7 @@ public class OrderItem : BaseEntity {
 	[Key]
 	[Display(Name = "OrderItemId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>
@@ -68,16 +68,16 @@ public class OrderItem : BaseEntity {
 	}
 
 	/// <summary>
-	/// Gets or sets the price of the total amount of <see cref="Coffee"/> at the time of purchase.
+	/// Gets or sets the price of the associated <see cref="Coffee"/> entity.
 	/// </summary>
 	/// <remarks>
-	/// Has a range limit between 0 and 150000.00 but is allowed to contain a total of 18 digits.
+	/// Has a range limit between 0 and 50.00 but is allowed to contain a total of 18 digits.
 	/// </remarks>
 	[DataType(DataType.Currency)]
 	[Column(TypeName = "decimal(18, 2)")]
-	[Range(typeof(decimal), "0.00", "150000.00")]
-	[Display(Name = "PriceAtPurchase")]
-	public required decimal PriceAtPurchase {
+	[Range(0.00, 50.00)]
+	[Display(Name = "UnitPrice")]
+	public required decimal UnitPrice {
 		get; set;
 	}
 
@@ -89,32 +89,27 @@ public class OrderItem : BaseEntity {
 	/// generated <see cref="OrderItem"/> instance.
 	/// </param>
 	/// <param name="coffees">
-	/// A key-value-pair of coffee identifiers and their corresponding price. Each index is mapped directly to a
-	/// generated <see cref="OrderItem"/> instance.
+	/// A key-value-pair of coffee identifiers and their corresponding price. Each index is
+	/// mapped directly to a generated <see cref="OrderItem"/> instance.
 	/// </param>
 	/// <returns>
 	/// An array of <see cref="OrderItem"/> objects containing predefined order item data
 	/// associated with the provided order and coffee identifiers.
 	/// </returns>
 	public static OrderItem[] SeedingData(long[] orderIds, KeyValuePair<long, decimal>[] coffees) {
-		Random rnd = new();
-		var items = new OrderItem[orderIds.Length];
+		return orderIds.Select(orderId => {
+			var randomCoffee = coffees[Random.Shared.Next(coffees.Length)];
+			int quantity = Random.Shared.Next(1, 26); // 1–25 units
 
-		for (int i = 0; i < orderIds.Length; i++) {
-			var coffee = coffees[rnd.Next(coffees.Length)];
-			int quantity = rnd.Next(1, 6); // 1–5 units
-
-			items[i] = new OrderItem {
-				OrderId = orderIds[i],
-				CoffeeId = coffee.Key,
+			return new OrderItem {
+				OrderId = orderId,
+				CoffeeId = randomCoffee.Key,
 				Quantity = quantity,
-				PriceAtPurchase = Math.Round(
-					(decimal) (coffee.Value * quantity),
+				UnitPrice = Math.Round(
+					(decimal) (randomCoffee.Value * quantity),
 					2
-				 )
+				)
 			};
-		}
-
-		return items;
+		}).ToArray();
 	}
 }

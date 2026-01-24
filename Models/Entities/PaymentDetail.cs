@@ -22,7 +22,7 @@ public class PaymentDetail : BaseEntity {
 	[Key]
 	[Display(Name = "PaymentDetailsId")]
 	public long Id {
-		get; private set;
+		get; init;
 	}
 
 	/// <summary>

@@ -23,7 +23,7 @@ public abstract class BaseIdentityEntity : IdentityUser<long> {
 	[DisplayFormat(DataFormatString = "{0:dd-MM-yyyy HH:mm}", ApplyFormatInEditMode = true)]
 	[Display(Name = "CreatedAt")]
 	public DateTime CreatedAt {
-		get; private set;
+		get; set;
 	} = DateTime.UtcNow;
 
 	/// <summary>
