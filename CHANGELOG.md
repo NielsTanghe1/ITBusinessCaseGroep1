@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-01-24
+
+### Added
+
+Created DTO classes for all main entities under `/Models/Entities/DTO/`.
+
+Each DTO inherits from its corresponding entity and overrides relational entity mappings for optimized API responses:
+- AddressDTO
+- CoffeeDTO
+- CoffeeUserDTO
+- OrderDTO
+- OrderItemDTO
+- PaymentDetailDTO
+
 ## [1.7.0] - 2026-01-16
 
 ### Added
@@ -174,6 +188,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.8.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.0
 [1.7.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.7.0
 [1.6.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.1
 [1.6.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.6.0
