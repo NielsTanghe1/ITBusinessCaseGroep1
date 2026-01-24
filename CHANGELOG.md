@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-01-24
+
+### Fixed
+
+Corrected PaymentDetail property validation and data types:
+- Changed LastFour from int to string to preserve leading zeros.
+- Replaced [Range] annotations with [StringLength] and added 4-digit regex validation for LastFour.
+
+Updated PaymentDetail.SeedingData() to align with property changes.
+
+Generated migrations for both LocalDbContext and GlobalDbContext.
+
 ## [1.10.0] - 2026-01-24
 
 ### Added
@@ -238,6 +250,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.10.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.1
 [1.10.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.0
 [1.9.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.9.0
 [1.8.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.1
