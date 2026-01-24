@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-01-24
+
+### Added
+
+Added entity-DTO mapping extension methods for all main entities (ToDTO(), ToModel(), ToExisting()).
+
 ## [1.8.1] - 2026-01-24
 
 ### Changed
@@ -202,6 +208,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.9.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.9.0
 [1.8.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.1
 [1.8.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.8.0
 [1.7.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.7.0
