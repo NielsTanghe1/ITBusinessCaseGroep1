@@ -42,7 +42,7 @@ builder.Services
 	})
 	.AddEntityFrameworkStores<LocalDbContext>();
 
-// Add services to the container.
+// MVC
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages();
@@ -53,6 +53,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope()) {
 	var services = scope.ServiceProvider;
 	try {
+		await GlobalDbContext.Seeder(services);
 		await LocalDbContext.Seeder(services);
 	} catch (Exception ex) {
 		var logger = services.GetRequiredService<ILogger<Program>>();
@@ -68,6 +69,7 @@ if (!app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();

@@ -27,6 +27,7 @@ public static class CoffeeUserMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			FirstName = model.FirstName,
 			LastName = model.LastName,
 			UserName = model.UserName,
@@ -60,6 +61,7 @@ public static class CoffeeUserMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			FirstName = model.FirstName,
 			LastName = model.LastName,
 			UserName = model.UserName,

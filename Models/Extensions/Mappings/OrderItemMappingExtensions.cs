@@ -27,6 +27,7 @@ public static class OrderItemMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			OrderId = model.OrderId,
 			CoffeeId = model.CoffeeId,
 			Quantity = model.Quantity,
@@ -53,6 +54,7 @@ public static class OrderItemMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			OrderId = model.OrderId,
 			CoffeeId = model.CoffeeId,
 			Quantity = model.Quantity,

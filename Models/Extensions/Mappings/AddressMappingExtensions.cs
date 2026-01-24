@@ -27,6 +27,7 @@ public static class AddressMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			CoffeeUserId = model.CoffeeUserId,
 			Type = model.Type,
 			Street = model.Street,
@@ -56,6 +57,7 @@ public static class AddressMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			CoffeeUserId = model.CoffeeUserId,
 			Type = model.Type,
 			Street = model.Street,

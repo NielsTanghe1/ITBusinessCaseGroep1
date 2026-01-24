@@ -27,6 +27,7 @@ public static class OrderMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			CoffeeUserId = model.CoffeeUserId,
 			CreatedAt = model.CreatedAt,
 			DeletedAt = model.DeletedAt
@@ -50,6 +51,7 @@ public static class OrderMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			CoffeeUserId = model.CoffeeUserId,
 			CreatedAt = model.CreatedAt,
 			DeletedAt = model.DeletedAt

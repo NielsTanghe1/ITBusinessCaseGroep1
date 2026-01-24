@@ -27,6 +27,7 @@ public static class PaymentDetailMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			CoffeeUserId = model.CoffeeUserId,
 			LastFour = model.LastFour,
 			ExpiryDate = model.ExpiryDate,
@@ -53,6 +54,7 @@ public static class PaymentDetailMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			CoffeeUserId = model.CoffeeUserId,
 			LastFour = model.LastFour,
 			ExpiryDate = model.ExpiryDate,

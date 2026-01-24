@@ -27,6 +27,7 @@ public static class CoffeeMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			GlobalId = model.Id,
 			Name = model.Name,
 			Type = model.Type,
 			Price = model.Price,
@@ -52,6 +53,7 @@ public static class CoffeeMappingExtensions {
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
+			Id = model.GlobalId ?? 0L,
 			Name = model.Name,
 			Type = model.Type,
 			Price = model.Price,
