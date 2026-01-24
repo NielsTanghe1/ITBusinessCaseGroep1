@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (tries) to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2] - 2026-01-24
+
+### Fixed
+
+Corrected user/role assignment in LocalDbContext seeding by using tracked users from userManager.
+
+Removed CoffeeUser shadow property override for IdentityUser.Id to align with Identity framework expectations.
+
+Extended "User" role assignment to administrators during seeding.
+
 ## [1.10.1] - 2026-01-24
 
 ### Fixed
@@ -250,6 +260,7 @@ Add folders to Models:
 
 - Initial commit: creates repository.
 
+[1.10.2]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.2
 [1.10.1]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.1
 [1.10.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.10.0
 [1.9.0]: https://github.com/NielsTanghe1/ITBusinessCaseGroep1/releases/tag/v1.9.0

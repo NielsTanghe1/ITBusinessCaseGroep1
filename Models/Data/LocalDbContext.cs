@@ -83,20 +83,18 @@ public class LocalDbContext : BaseIdentityDbContext {
 				await userManager.CreateAsync(user, "P@ssword1");
 			}
 
-			var admin1 = localEntities.FirstOrDefault(u => u.Email == "alice@example.com");
+			var admin1 = await userManager.FindByEmailAsync("alice@example.com");
 			if (admin1 != null) {
 				await userManager.AddToRoleAsync(admin1, "Admin");
 			}
 
-			var admin2 = localEntities.FirstOrDefault(u => u.Email == "bob@example.com");
+			var admin2 = await userManager.FindByEmailAsync("bob@example.com");
 			if (admin2 != null) {
 				await userManager.AddToRoleAsync(admin2, "Admin");
 			}
 
-			foreach (var u in localEntities) {
-				if (!await userManager.IsInRoleAsync(u, "Admin")) {
-					await userManager.AddToRoleAsync(u, "User");
-				}
+			foreach (var user in userManager.Users) {
+				await userManager.AddToRoleAsync(user, "User");
 			}
 		}
 
