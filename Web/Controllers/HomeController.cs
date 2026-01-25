@@ -92,4 +92,10 @@ public class HomeController : Controller {
 
 		return View(order);
 	}
+
+	//[HttpPost]
+	//public IActionResult SubmitOrder(OrderViewModel order) {
+	//	TempData["Message"] = "Order sent to RabbitMQ!";
+	//	return RedirectToAction("Index");
+	//}
 }

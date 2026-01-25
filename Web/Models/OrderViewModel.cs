@@ -3,26 +3,15 @@
 namespace Web.Models;
 
 public class OrderViewModel {
-	// Customer details
-	public required CoffeeUser CoffeeUser {
+	public long CoffeeUserId {
 		get; set;
 	}
 
-	// Shipping address
-	public required Address Address {
+	public long OrderId {
 		get; set;
 	}
 
-	// Product
-	public List<OrderItem>? Items {
+	public List<OrderItem> Items {
 		get; set;
-	}
-
-	public decimal TotalPrice {
-		get {
-			decimal total = 0;
-			Items.ForEach(item => total += item.UnitPrice);
-			return total;
-		}
-	}
+	} = [];
 }

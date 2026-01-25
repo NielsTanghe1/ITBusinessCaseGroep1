@@ -8,6 +8,7 @@ using Models.Entities;
 using Web.Models;
 using Models.Entities.Records;
 using Web.Consumers;
+using Models.Entities.DTO;
 
 namespace Web.Controllers;
 
@@ -126,6 +127,30 @@ public class AdminController : Controller {
 	// ORDERS (LIST)
 	// -------------------
 	public async Task<IActionResult> Orders() {
+		//var orders = await _db.Orders
+		//	 .OrderByDescending(o => o.CreatedAt)
+		//	 .ToListAsync();
+
+		//var list = orders.Select(o =>
+		//{
+		//	var parsed = new OrderDTO() {
+		//		CoffeeUserId = o.CoffeeUserId,
+		//		OrderId = o.Id,
+		//		CoffeeId = o.
+		//	};
+
+		//	return new AdminOrderListItemVm {
+		//		Id = o.Id,
+		//		OrderId = o.OrderId,
+		//		Status = o.Status,
+		//		CreatedAtUtc = o.CreatedAtUtc,
+		//		FullName = parsed != null ? $"{parsed.FirstName} {parsed.LastName}".Trim() : "(onbekend)",
+		//		Email = parsed?.Email ?? "(onbekend)",
+		//		Total = parsed?.Total
+		//	};
+		//}).ToList();
+
+		//return View(list);
 		return Ok();
 	}
 
@@ -133,6 +158,22 @@ public class AdminController : Controller {
 	// ORDERS (DETAILS)
 	// -------------------
 	public async Task<IActionResult> OrderDetails(int id) {
+		//var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+		//if (order == null)
+		//	return NotFound();
+
+		//var parsed = TryParseOrder(order.PayloadJson);
+
+		//var vm = new AdminOrderDetailsVm {
+		//	Id = order.Id,
+		//	OrderId = order.OrderId,
+		//	Status = order.Status,
+		//	CreatedAtUtc = order.CreatedAtUtc,
+		//	RawJson = order.PayloadJson,
+		//	Payload = parsed
+		//};
+
+		//return View(vm);
 		return Ok();
 	}
 

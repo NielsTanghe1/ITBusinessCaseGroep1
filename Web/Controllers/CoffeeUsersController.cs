@@ -24,7 +24,7 @@ public class CoffeeUsersController : Controller {
 		}
 
 		var coffeeUser = await _context.Users
-			  .FirstOrDefaultAsync(m => m.Id == id);
+			.FirstOrDefaultAsync(m => m.Id == id);
 		if (coffeeUser == null) {
 			return NotFound();
 		}
@@ -38,6 +38,8 @@ public class CoffeeUsersController : Controller {
 	}
 
 	// POST: CoffeeUsers/Create
+	// To protect from overposting attacks, enable the specific properties you want to bind to.
+	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	// Changed parameter to CoffeeUserDTO
@@ -67,6 +69,8 @@ public class CoffeeUsersController : Controller {
 	}
 
 	// POST: CoffeeUsers/Edit/5
+	// To protect from overposting attacks, enable the specific properties you want to bind to.
+	// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	// Changed parameter to CoffeeUserDTO
