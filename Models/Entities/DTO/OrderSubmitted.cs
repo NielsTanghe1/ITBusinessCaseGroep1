@@ -1,6 +1,6 @@
 ﻿using Models.Entities.Enums;
 
-namespace Models.Entities.Records;
+namespace Models.Entities.DTO;
 
 public record OrderSubmitted(
 	long CoffeeUserId,

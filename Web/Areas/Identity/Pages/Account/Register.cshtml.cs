@@ -5,11 +5,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
+using Models.Entities.DTO;
 using Models.Extensions.Mappings;
 using System.ComponentModel.DataAnnotations;
+using Web.Services;
 
 namespace Web.Areas.Identity.Pages.Account;
 
@@ -21,6 +22,7 @@ public class RegisterModel : PageModel {
 	private readonly ILogger<RegisterModel> _logger;
 	private readonly LocalDbContext _contextLocal;
 	private readonly GlobalDbContext _contextGlobal;
+	private readonly Utilities _utilities;
 
 	public RegisterModel(
 		UserManager<CoffeeUser> userManager,
@@ -28,7 +30,8 @@ public class RegisterModel : PageModel {
 		SignInManager<CoffeeUser> signInManager,
 		ILogger<RegisterModel> logger,
 		LocalDbContext contextLocal,
-		GlobalDbContext contextGlobal) {
+		GlobalDbContext contextGlobal,
+		Utilities utilities) {
 		_userManager = userManager;
 		_userStore = userStore;
 		_emailStore = GetEmailStore();
@@ -36,6 +39,7 @@ public class RegisterModel : PageModel {
 		_logger = logger;
 		_contextLocal = contextLocal;
 		_contextGlobal = contextGlobal;
+		_utilities = utilities;
 	}
 
 	[BindProperty]
@@ -117,7 +121,20 @@ public class RegisterModel : PageModel {
 			var updateResult = await _userManager.UpdateAsync(localUser);
 
 			if (updateResult.Succeeded) {
-				// 3. Only sign in once BOTH databases are consistent
+				// 3. Send a message to RabbitMQ to notify subscribers
+				var address = _contextGlobal.Addresses.First(e => e.CoffeeUserId == globalUser.Id);
+				await _utilities.SendMessageTo("UserSubmitted", new CoffeeUserSubmitted(
+					globalUser.Id,
+					globalUser.Email,
+					globalUser.FirstName,
+					globalUser.LastName,
+					address.Street,
+					address.City,
+					address.HouseNumber,
+					address.CountryISO
+				));
+
+				// 4. Only sign in once BOTH databases are consistent
 				await _signInManager.SignInAsync(localUser, isPersistent: false);
 				return LocalRedirect(returnUrl);
 			}
