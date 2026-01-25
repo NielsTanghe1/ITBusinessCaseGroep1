@@ -75,7 +75,7 @@ public class OrderItem : BaseEntity {
 	/// </remarks>
 	[DataType(DataType.Currency)]
 	[Column(TypeName = "decimal(18, 2)")]
-	[Range(0.00, 50.00)] // Use double literals here
+	[Range(0.00, 50.00)]
 	[Display(Name = "UnitPrice")]
 	public required decimal UnitPrice {
 		get; set;
@@ -89,32 +89,27 @@ public class OrderItem : BaseEntity {
 	/// generated <see cref="OrderItem"/> instance.
 	/// </param>
 	/// <param name="coffees">
-	/// A key-value-pair of coffee identifiers and their corresponding price. Each index is mapped directly to a
-	/// generated <see cref="OrderItem"/> instance.
+	/// A key-value-pair of coffee identifiers and their corresponding price. Each index is
+	/// mapped directly to a generated <see cref="OrderItem"/> instance.
 	/// </param>
 	/// <returns>
 	/// An array of <see cref="OrderItem"/> objects containing predefined order item data
 	/// associated with the provided order and coffee identifiers.
 	/// </returns>
 	public static OrderItem[] SeedingData(long[] orderIds, KeyValuePair<long, decimal>[] coffees) {
-		Random rnd = new();
-		var items = new OrderItem[orderIds.Length];
+		return orderIds.Select(orderId => {
+			var randomCoffee = coffees[Random.Shared.Next(coffees.Length)];
+			int quantity = Random.Shared.Next(1, 26); // 1–25 units
 
-		for (int i = 0; i < orderIds.Length; i++) {
-			var coffee = coffees[rnd.Next(coffees.Length)];
-			int quantity = rnd.Next(1, 6); // 1–5 units
-
-			items[i] = new OrderItem {
-				OrderId = orderIds[i],
-				CoffeeId = coffee.Key,
+			return new OrderItem {
+				OrderId = orderId,
+				CoffeeId = randomCoffee.Key,
 				Quantity = quantity,
 				UnitPrice = Math.Round(
-					(decimal) (coffee.Value * quantity),
+					(decimal) (randomCoffee.Value * quantity),
 					2
-				 )
+				)
 			};
-		}
-
-		return items;
+		}).ToArray();
 	}
 }

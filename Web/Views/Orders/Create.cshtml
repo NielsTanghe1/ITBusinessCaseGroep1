@@ -1,52 +1,11 @@
-﻿@model Models.Entities.DTO.OrderDTO
-@*
-@model Web.Models.OrderViewModel
+﻿@model Web.Models.OrderViewModel
 @using Models.Data
-*@
 
 @{
-	ViewData["Title"] = "Create";
-	// ViewData["Title"] = "Coffee Shop";
-	// var context = ViewBag.Context as LocalDbContext;
+	ViewData["Title"] = "Coffee Shop";
+	var context = ViewBag.Context as LocalDbContext;
 }
 
-<h1>Create</h1>
-
-<h4>Order</h4>
-<hr />
-<div class="row">
-	<div class="col-md-4">
-		<form asp-action="Create">
-			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-			@* <input type="hidden" asp-for="CreatedAt" />
-			<input type="hidden" asp-for="DeletedAt" /> *@
-			<div class="form-group">
-				<label asp-for="CoffeeUserId" class="control-label"></label>
-				<select asp-for="CoffeeUserId" class="form-control" asp-items="ViewBag.CoffeeUserId"></select>
-			</div>
-			<div class="form-group">
-				<label asp-for="Status" class="control-label"></label>
-				<select asp-for="Status" class="form-control" asp-items="ViewBag.StatusTypes"></select>
-				<span asp-validation-for="Status" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<input type="submit" value="Create" class="btn btn-primary" />
-			</div>
-		</form>
-	</div>
-</div>
-
-<div>
-	<a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
-}
-
-@*
 <div class="container py-4">
 
 	<!-- HEADER -->
@@ -104,7 +63,7 @@
 
 				<div class="col-6 col-md-4 col-lg-4">
 					<div class="product-card h-100 js-product-card" data-product-id="@p.Id">
-						<img src="@p.ImageUrl" alt="@p.Name" class="product-image" />
+						@* <img src="@p.ImageUrl" alt="@p.Name" class="product-image" /> *@
 
 						<div class="p-3">
 							<div class="d-flex justify-content-between align-items-start">
@@ -120,10 +79,10 @@
 							<div class="mt-2">
 								<label class="form-label small">Aantal</label>
 								<select class="form-select js-qty"
-									asp-for="Items[@i].Quantity"
-									data-name="@p.Name"
-									data-price="@p.Price"
-									data-product-id="@p.Id">
+										  asp-for="Items[@i].Quantity"
+										  data-name="@p.Name"
+										  data-price="@p.Price"
+										  data-product-id="@p.Id">
 									<option value="0">0</option>
 									@for (int q = 1; q <= 10; q++) {
 										<option value="@q">@q</option>
@@ -182,6 +141,10 @@
 </div>
 
 @section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
 	<script>
 		function money(n) { return (n || 0).toFixed(2); }
 
@@ -296,10 +259,3 @@
 		});
 	</script>
 }
-
-@section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
-}
-*@

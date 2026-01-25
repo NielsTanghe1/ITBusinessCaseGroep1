@@ -1,20 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Models.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models.Entities.DTO;
 
-// MUST inherit from Order
+/// <summary>
+/// Data Transfer Object representing a simplified version of a Order,
+/// used for transporting data across application layers.
+/// </summary>
 public class OrderDTO : Order {
-	// New property for Sync
-	public long GlobalId {
-		get; set;
-	}
-
-	// Shadow properties to fix the "Include" error
+	/// <summary>
+	/// Gets or sets the coffee user associated with this Order.
+	/// This hides the base <see cref="Order.CoffeeUser"/> to provide a DTO-specific version.
+	/// </summary>
+	/// <remarks>
+	/// The 'new' keyword is used here to specialize the return type for DTO consumers.
+	/// </remarks>
+	[DeleteBehavior(DeleteBehavior.Restrict)]
+	[Display(Name = "CoffeeUser")]
 	public new CoffeeUserDTO? CoffeeUser {
-		get; set;
-	}
-	public new List<OrderItemDTO>? Items {
 		get; set;
 	}
 }

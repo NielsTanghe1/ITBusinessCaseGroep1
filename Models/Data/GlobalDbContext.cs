@@ -1,59 +1,89 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Models.Entities;
 
 namespace Models.Data;
 
-public class GlobalDbContext : BaseDbContext<CoffeeUser> {
+/// <summary>
+/// The database context for the global ITBusinessCoffee SQL environment, responsible for
+/// online data storage.
+/// Manages access to addresses, user, orders, pending RabbitMQ messages/payloads, etc...
+/// </summary>
+public class GlobalDbContext : BaseBackupDbContext {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="GlobalDbContext"/> class
+	/// with default options.
+	/// </summary>
+	public GlobalDbContext() : base() { }
 
-	public DbSet<Address> Addresses {
-		get; set;
-	}
-	public DbSet<Order> Orders {
-		get; set;
-	}
-	public DbSet<OrderItem> OrderItems {
-		get; set;
-	}
-	public DbSet<PaymentDetail> PaymentDetails {
-		get; set;
-	}
-	public DbSet<Coffee> Coffees {
-		get; set;
-	}
-
+	/// <summary>
+	/// Initializes a new instance of the <see cref="GlobalDbContext"/> class
+	/// with the specified configuration.
+	/// </summary>
+	/// <param name="options">
+	/// The configuration options for this database context.
+	/// </param>
 	public GlobalDbContext(DbContextOptions<GlobalDbContext> options) : base(options) { }
 
-	protected override void OnModelCreating(ModelBuilder modelBuilder) {
-		base.OnModelCreating(modelBuilder);
+	/// <summary>
+	/// Adds initial data (seed data) to the database if it is empty.
+	/// </summary>
+	/// <param name="serviceProvider">
+	/// The service provider for retrieving required services such as the database context.
+	/// </param>
+	/// <returns>
+	/// A task representing the asynchronous operation.
+	/// </returns>
+	public static async Task Seeder(IServiceProvider serviceProvider) {
+		var contextGlobal = serviceProvider.GetRequiredService<GlobalDbContext>();
+		var contextLocal = serviceProvider.GetRequiredService<LocalDbContext>();
 
-		// Restore standard configuration for base entities
-		modelBuilder.Entity<CoffeeUser>(entity => {
-			entity.Property(e => e.Id).HasColumnName("CoffeeUserId");
-			entity.HasIndex(e => e.Email).IsUnique();
-		});
+		if (!contextGlobal.Roles.Any()) {
+			contextGlobal.Roles.AddRange(new List<IdentityRole<long>> {
+				new() { Name = "Admin" },
+				new() { Name = "User" }
+			});
+			await contextGlobal.SaveChangesAsync();
+		}
 
-		modelBuilder.Entity<Address>(entity => {
-			entity.Property(e => e.Id).HasColumnName("AddressId");
-			entity.Property(e => e.Type).HasConversion<string>();
-		});
+		if (!contextGlobal.Users.Any()) {
+			contextGlobal.Users.AddRange(CoffeeUser.SeedingData());
+			await contextGlobal.SaveChangesAsync();
+		}
 
-		modelBuilder.Entity<Order>(entity => {
-			entity.Property(e => e.Id).HasColumnName("OrderId");
-			entity.Property(e => e.Status).HasConversion<string>();
-		});
+		string[] sourceArray = ["alice@example.com", "bob@example.com"];
+		long[] userIds = contextGlobal.Users
+			.Where(user => !sourceArray.Contains(user.Email))
+			.Select(user => user.Id)
+			.ToArray();
 
-		modelBuilder.Entity<OrderItem>(entity =>
-			 entity.Property(e => e.Id).HasColumnName("OrderItemId")
-		);
+		if (!contextGlobal.Coffees.Any()) {
+			contextGlobal.Coffees.AddRange(Coffee.SeedingData());
+			await contextGlobal.SaveChangesAsync();
+		}
 
-		modelBuilder.Entity<PaymentDetail>(entity =>
-			 entity.Property(e => e.Id).HasColumnName("PaymentDetailId")
-		);
+		if (!contextGlobal.Addresses.Any()) {
+			contextGlobal.Addresses.AddRange(Address.SeedingData(userIds));
+			await contextGlobal.SaveChangesAsync();
+		}
 
-		modelBuilder.Entity<Coffee>(entity => {
-			entity.Property(e => e.Id).HasColumnName("CoffeeId");
-			entity.Property(e => e.Name).HasConversion<string>();
-			entity.Property(e => e.Type).HasConversion<string>();
-		});
+		if (!contextGlobal.PaymentDetails.Any()) {
+			contextGlobal.PaymentDetails.AddRange(PaymentDetail.SeedingData(userIds));
+			await contextGlobal.SaveChangesAsync();
+		}
+
+		if (!contextGlobal.Orders.Any()) {
+			contextGlobal.Orders.AddRange(Order.SeedingData(userIds));
+			await contextGlobal.SaveChangesAsync();
+		}
+
+		if (!contextGlobal.OrderItems.Any()) {
+			var orderIds = contextGlobal.Orders.Select(o => o.Id).ToArray();
+			var coffeeInfo = contextGlobal.Coffees.Select(c => new KeyValuePair<long, decimal>(c.Id, c.Price)).ToArray();
+
+			contextGlobal.OrderItems.AddRange(OrderItem.SeedingData(orderIds, coffeeInfo));
+			await contextGlobal.SaveChangesAsync();
+		}
 	}
 }

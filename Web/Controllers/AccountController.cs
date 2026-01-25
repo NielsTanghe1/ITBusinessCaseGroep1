@@ -3,20 +3,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Data;
-using Models.Entities.DTO; // Added namespace
+using Models.Entities;
 
 namespace Web.Controllers;
 
 public class AccountController : Controller {
-	// Updated types to CoffeeUserDTO
-	private readonly UserManager<CoffeeUserDTO> _userManager;
-	private readonly SignInManager<CoffeeUserDTO> _signInManager;
+	private readonly UserManager<CoffeeUser> _userManager;
+	private readonly SignInManager<CoffeeUser> _signInManager;
 	private readonly LocalDbContext _context;
 
 	public AccountController(
-		  UserManager<CoffeeUserDTO> userManager,
-		  SignInManager<CoffeeUserDTO> signInManager,
-		  LocalDbContext context) {
+		UserManager<CoffeeUser> userManager,
+		SignInManager<CoffeeUser> signInManager,
+		LocalDbContext context) {
 		_userManager = userManager;
 		_signInManager = signInManager;
 		_context = context;
@@ -51,10 +50,10 @@ public class AccountController : Controller {
 		}
 
 		var result = await _signInManager.PasswordSignInAsync(
-			  user,
-			  model.LoginPassword!,
-			  isPersistent: false,
-			  lockoutOnFailure: false);
+			user,
+			model.LoginPassword!,
+			isPersistent: false,
+			lockoutOnFailure: false);
 
 		if (result.Succeeded)
 			return RedirectToAction("Index", "Home");

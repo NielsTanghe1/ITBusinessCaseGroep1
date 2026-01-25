@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
-using Models.Entities.DTO;
 using Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,8 +36,7 @@ builder.Services.AddDbContext<GlobalDbContext>(options =>
 
 // Identity system
 builder.Services
-	 // CHANGE CoffeeUser TO CoffeeUserDTO HERE:
-	 .AddIdentity<CoffeeUserDTO, IdentityRole<long>>(options => {
+	 .AddIdentity<CoffeeUser, IdentityRole<long>>(options => {
 		 options.Password.RequireDigit = false;
 		 options.Password.RequireLowercase = false;
 		 options.Password.RequireNonAlphanumeric = false;
@@ -107,6 +105,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope()) {
 	var services = scope.ServiceProvider;
 	try {
+		await GlobalDbContext.Seeder(services);
 		await LocalDbContext.Seeder(services);
 	} catch (Exception ex) {
 		var logger = services.GetRequiredService<ILogger<Program>>();
@@ -124,11 +123,10 @@ if (!app.Environment.IsDevelopment()) {
 	app.UseHsts();
 }
 
-// ✅ Nodig voor wwwroot/images/css/js
-app.UseStaticFiles();
-
 // Als je enkel HTTP gebruikt, laat deze uit
 // app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 
 app.UseRouting();
 app.UseAuthorization();

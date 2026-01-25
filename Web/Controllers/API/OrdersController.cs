@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Models.Entities.DTO;
+using Web.Models;
 
 namespace Web.Controllers.API;
 
@@ -14,7 +15,7 @@ public class OrdersController : ControllerBase {
 	}
 
 	[HttpPost]
-	public async Task<IActionResult> CreateOrder([FromBody] OrderDTO request) {
+	public async Task<IActionResult> CreateOrder([FromBody] OrderViewModel request) {
 		//// Map the request to the full OrderCreated contract
 		//var message = new OrderDTO(
 		//);

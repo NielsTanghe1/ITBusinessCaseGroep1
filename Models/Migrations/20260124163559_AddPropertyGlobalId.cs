@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace Models.Migrations.GlobalMigrations
+namespace Models.Migrations
 {
     /// <inheritdoc />
-    public partial class AddGlobalIdToBase : Migration
+    public partial class AddPropertyGlobalId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,43 +14,37 @@ namespace Models.Migrations.GlobalMigrations
                 name: "GlobalId",
                 table: "PaymentDetails",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
 
             migrationBuilder.AddColumn<long>(
                 name: "GlobalId",
                 table: "Orders",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
 
             migrationBuilder.AddColumn<long>(
                 name: "GlobalId",
                 table: "OrderItems",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
 
             migrationBuilder.AddColumn<long>(
                 name: "GlobalId",
                 table: "Coffees",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
 
             migrationBuilder.AddColumn<long>(
                 name: "GlobalId",
                 table: "AspNetUsers",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
 
             migrationBuilder.AddColumn<long>(
                 name: "GlobalId",
                 table: "Addresses",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true);
         }
 
         /// <inheritdoc />

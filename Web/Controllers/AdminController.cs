@@ -4,22 +4,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Models.Entities.DTO;
 using Models.Entities;
 
 namespace Web.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller {
-	// 1. Change Injection Type to CoffeeUserDTO
-	private readonly UserManager<CoffeeUserDTO> _userManager;
+	private readonly UserManager<CoffeeUser> _userManager;
 	private readonly RoleManager<IdentityRole<long>> _roleManager;
 	private readonly LocalDbContext _db;
 
 	public AdminController(
-		  UserManager<CoffeeUserDTO> userManager, // 2. Update Constructor
-		  RoleManager<IdentityRole<long>> roleManager,
-		  LocalDbContext db) {
+		UserManager<CoffeeUser> userManager,
+		RoleManager<IdentityRole<long>> roleManager,
+		LocalDbContext db) {
 		_userManager = userManager;
 		_roleManager = roleManager;
 		_db = db;
@@ -33,7 +31,7 @@ public class AdminController : Controller {
 			  .ToListAsync();
 
 		// 3. Update Tuple type to use CoffeeUserDTO
-		var vm = new List<(CoffeeUserDTO user, IList<string> roles)>();
+		var vm = new List<(CoffeeUser user, IList<string> roles)>();
 		foreach (var u in users)
 			vm.Add((u, await _userManager.GetRolesAsync(u)));
 
@@ -49,7 +47,7 @@ public class AdminController : Controller {
 			return View(model);
 
 		// 4. Instantiate CoffeeUserDTO instead of CoffeeUser
-		var user = new CoffeeUserDTO {
+		var user = new CoffeeUser {
 			FirstName = model.FirstName,
 			LastName = model.LastName,
 			UserName = model.Email,

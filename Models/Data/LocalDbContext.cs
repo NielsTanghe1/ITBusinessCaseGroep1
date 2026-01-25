@@ -2,186 +2,226 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Models.Entities;
-using Models.Entities.DTO;
+using Models.Extensions.Mappings;
 
 namespace Models.Data;
 
-public class LocalDbContext : BaseDbContext<CoffeeUserDTO> {
-
-	public DbSet<AddressDTO> Addresses {
-		get; set;
-	}
-	public DbSet<OrderDTO> Orders {
-		get; set;
-	}
-	public DbSet<OrderItemDTO> OrderItems {
-		get; set;
-	}
-	public DbSet<PaymentDetailDTO> PaymentDetails {
-		get; set;
-	}
-	public DbSet<CoffeeDTO> Coffees {
-		get; set;
-	}
-
+/// <summary>
+/// The database context for the local ITBusinessCoffee SQL environment, responsible for
+/// offline data storage.
+/// Manages access to addresses, user, orders, pending RabbitMQ messages/payloads, etc...
+/// </summary>
+public class LocalDbContext : BaseIdentityDbContext {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LocalDbContext"/> class
+	/// with default options.
+	/// </summary>
 	public LocalDbContext() : base() { }
 
 	public LocalDbContext(DbContextOptions<LocalDbContext> options) : base(options) { }
 
-	protected override void OnModelCreating(ModelBuilder modelBuilder) {
-		// 1. IMPORTANT: Ignore the base entities so EF doesn't create a hierarchy.
-		// This must be done BEFORE other configurations involving these types.
-		modelBuilder.Ignore<CoffeeUser>();
-		modelBuilder.Ignore<Coffee>();
-		modelBuilder.Ignore<Order>();
-		modelBuilder.Ignore<OrderItem>();
-		modelBuilder.Ignore<PaymentDetail>();
-		modelBuilder.Ignore<Address>();
-
-		// 2. Call Identity configuration (sets up AspNetUsers, etc.)
-		base.OnModelCreating(modelBuilder);
-
-		// 3. Configure DTOs as Root Entities
-		modelBuilder.Entity<CoffeeUserDTO>(entity => {
-			entity.ToTable("AspNetUsers");
-			entity.Property(e => e.Id).HasColumnName("CoffeeUserId");
-		});
-
-		modelBuilder.Entity<AddressDTO>(entity => {
-			entity.ToTable("Addresses");
-			entity.Property(e => e.Id).HasColumnName("AddressId");
-			entity.Property(e => e.Type).HasConversion<string>();
-		});
-
-		modelBuilder.Entity<OrderDTO>(entity => {
-			entity.ToTable("Orders");
-			entity.Property(e => e.Id).HasColumnName("OrderId");
-			entity.Property(e => e.Status).HasConversion<string>();
-		});
-
-		modelBuilder.Entity<OrderItemDTO>(entity => {
-			entity.ToTable("OrderItems");
-			entity.Property(e => e.Id).HasColumnName("OrderItemId");
-		});
-
-		modelBuilder.Entity<PaymentDetailDTO>(entity => {
-			entity.ToTable("PaymentDetails");
-			entity.Property(e => e.Id).HasColumnName("PaymentDetailId");
-		});
-
-		modelBuilder.Entity<CoffeeDTO>(entity => {
-			entity.ToTable("Coffees");
-			entity.Property(e => e.Id).HasColumnName("CoffeeId");
-			entity.Property(e => e.Name).HasConversion<string>();
-			entity.Property(e => e.Type).HasConversion<string>();
-		});
-	}
-
+	/// <summary>
+	/// Adds initial data (seed data) to the database if it is empty.
+	/// </summary>
+	/// <param name="serviceProvider">
+	/// The service provider for retrieving required services such as the database context.
+	/// </param>
+	/// <returns>
+	/// A task representing the asynchronous operation.
+	/// </returns>
 	public static async Task Seeder(IServiceProvider serviceProvider) {
-		var context = serviceProvider.GetRequiredService<LocalDbContext>();
-		var userManager = serviceProvider.GetRequiredService<UserManager<CoffeeUserDTO>>();
+		var contextGlobal = serviceProvider.GetRequiredService<GlobalDbContext>();
+		var contextLocal = serviceProvider.GetRequiredService<LocalDbContext>();
+		var userManager = serviceProvider.GetRequiredService<UserManager<CoffeeUser>>();
 		var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole<long>>>();
 
-		if (!context.Roles.Any()) {
-			await roleManager.CreateAsync(new IdentityRole<long> { Name = "Admin", NormalizedName = "ADMIN" });
-			await roleManager.CreateAsync(new IdentityRole<long> { Name = "User", NormalizedName = "USER" });
-			await roleManager.CreateAsync(new IdentityRole<long> { Name = "Customer", NormalizedName = "Customer" });
+		// When seeding the local context with global context items, we do the following:
+		// 1. Copy global entities to DTOs (preserves data, meant to create new local IDs) avoids foreign key conflicts
+		// 2. Use AsNoTracking() to avoid "Entity is already tracked" errors.
+		// 3. Randomize the order of global entities for varied local dataset
+		// 4. Create fresh model entities with new local IDs, but copy global data
+		// 5. Use the null forgiving operator to store the GlobalId for every new model entity
+
+		if (!contextLocal.Roles.Any()) {
+			var globalRoles = await contextGlobal.Roles.AsNoTracking().ToArrayAsync();
+
+			foreach (var role in globalRoles) {
+				await roleManager.CreateAsync(new IdentityRole<long>() { Name = role.Name });
+			}
 		}
 
-		if (!context.Users.Any()) {
-			var originalUsers = CoffeeUser.SeedingData();
-			foreach (var original in originalUsers) {
-				var userDto = new CoffeeUserDTO {
-					UserName = original.UserName,
-					Email = original.Email,
-					FirstName = original.FirstName,
-					LastName = original.LastName,
-					EmailConfirmed = original.EmailConfirmed,
-					PhoneNumber = original.PhoneNumber,
-					GlobalId = Random.Shared.NextInt64()
-				};
-				await userManager.CreateAsync(userDto, "P@ssword1");
+		// We need these Maps to translate Global IDs to new Local IDs
+		// Key = GlobalId, Value = LocalId
+		Dictionary<long, long> userMap = [];
+		Dictionary<long, long> coffeeMap = [];
+		Dictionary<long, long> orderMap = [];
+
+		if (!contextLocal.Users.Any()) {
+			var globalAsDTOs = await contextGlobal.Users
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<CoffeeUser>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+				return localItem;
+			}).ToArray();
+
+			foreach (var user in localEntities) {
+				await userManager.CreateAsync(user, "P@ssword1");
 			}
 
-			var users = context.Users.ToList();
-			var admin1 = users.FirstOrDefault(u => u.Email == "alice@example.com");
-			if (admin1 != null)
+			var admin1 = await userManager.FindByEmailAsync("alice@example.com");
+			if (admin1 != null) {
 				await userManager.AddToRoleAsync(admin1, "Admin");
-			var admin2 = users.FirstOrDefault(u => u.Email == "bob@example.com");
-			if (admin2 != null)
-				await userManager.AddToRoleAsync(admin2, "Admin");
+			}
 
-			foreach (var u in users) {
-				if (!await userManager.IsInRoleAsync(u, "Admin")) {
-					await userManager.AddToRoleAsync(u, "Customer");
-				}
+			var admin2 = await userManager.FindByEmailAsync("bob@example.com");
+			if (admin2 != null) {
+				await userManager.AddToRoleAsync(admin2, "Admin");
+			}
+
+			foreach (var user in userManager.Users) {
+				await userManager.AddToRoleAsync(user, "User");
 			}
 		}
-		await context.SaveChangesAsync();
 
-		long[] customerUserIds = context.Users.Select(u => u.Id).ToArray();
+		// Populate User Map (Query the Local DB to see what IDs were generated)
+		userMap = await contextLocal.Users.ToDictionaryAsync(u => (long) u.GlobalId!, u => u.Id);
 
-		if (!context.Coffees.Any()) {
-			var coffees = Coffee.SeedingData().Select(c => new CoffeeDTO {
-				Name = c.Name,
-				Type = c.Type,
-				Price = c.Price,
-				GlobalId = Random.Shared.NextInt64()
-			});
-			context.Coffees.AddRange(coffees);
-			await context.SaveChangesAsync();
+		if (!contextLocal.Coffees.Any()) {
+			var globalAsDTOs = await contextGlobal.Coffees
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<Coffee>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+				return localItem;
+			}).ToList();
+
+			contextLocal.Coffees.AddRange(localEntities);
+			await contextLocal.SaveChangesAsync();
 		}
 
-		if (!context.Addresses.Any()) {
-			var addresses = Address.SeedingData(customerUserIds).Select(a => new AddressDTO {
-				CoffeeUserId = a.CoffeeUserId,
-				Type = a.Type,
-				Street = a.Street,
-				HouseNumber = a.HouseNumber,
-				City = a.City,
-				PostalCode = a.PostalCode,
-				CountryISO = a.CountryISO,
-				UnitNumber = a.UnitNumber,
-				GlobalId = Random.Shared.NextInt64()
-			});
-			context.Addresses.AddRange(addresses);
-			await context.SaveChangesAsync();
+		// Populate Coffee Map
+		coffeeMap = await contextLocal.Coffees.ToDictionaryAsync(c => (long) c.GlobalId!, c => c.Id);
+
+		if (!contextLocal.Addresses.Any()) {
+			var globalAsDTOs = await contextGlobal.Addresses
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<Address>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+
+				// Translate Foreign Keys
+				if (userMap.TryGetValue((long) localItem.GlobalId!, out long localUserId)) {
+					localItem.CoffeeUserId = localUserId;
+				}
+				return localItem;
+			}).ToArray();
+
+			contextLocal.Addresses.AddRange(localEntities);
+			await contextLocal.SaveChangesAsync();
 		}
 
-		if (!context.PaymentDetails.Any()) {
-			var payments = PaymentDetail.SeedingData(customerUserIds).Select(p => new PaymentDetailDTO {
-				CoffeeUserId = p.CoffeeUserId,
-				LastFour = p.LastFour,
-				ExpiryDate = p.ExpiryDate,
-				GatewayToken = p.GatewayToken,
-				GlobalId = Random.Shared.NextInt64()
-			});
-			context.PaymentDetails.AddRange(payments);
-			await context.SaveChangesAsync();
+		if (!contextLocal.PaymentDetails.Any()) {
+			var globalAsDTOs = await contextGlobal.PaymentDetails
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<PaymentDetail>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+
+				// Translate Foreign Keys
+				if (userMap.TryGetValue((long) localItem.GlobalId!, out long localUserId)) {
+					localItem.CoffeeUserId = localUserId;
+				}
+				return localItem;
+			}).ToArray();
+
+			contextLocal.PaymentDetails.AddRange(localEntities);
+			await contextLocal.SaveChangesAsync();
 		}
 
-		if (!context.Orders.Any()) {
-			var orders = Order.SeedingData(customerUserIds).Select(o => new OrderDTO {
-				CoffeeUserId = o.CoffeeUserId,
-				Status = o.Status,
-				GlobalId = Random.Shared.NextInt64()
-			});
-			context.Orders.AddRange(orders);
-			await context.SaveChangesAsync();
+		if (!contextLocal.Orders.Any()) {
+			var globalAsDTOs = await contextGlobal.Orders
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<Order>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+
+				// Translate Foreign Keys
+				if (userMap.TryGetValue((long) localItem.GlobalId!, out long localUserId)) {
+					localItem.CoffeeUserId = localUserId;
+				}
+				return localItem;
+			}).ToArray();
+
+			contextLocal.Orders.AddRange(localEntities);
+			await contextLocal.SaveChangesAsync();
 		}
 
-		if (!context.OrderItems.Any()) {
-			var orderIds = context.Orders.Select(o => o.Id).ToArray();
-			var coffeeInfo = context.Coffees.Select(c => new KeyValuePair<long, decimal>(c.Id, c.Price)).ToArray();
-			var items = OrderItem.SeedingData(orderIds, coffeeInfo).Select(i => new OrderItemDTO {
-				OrderId = i.OrderId,
-				CoffeeId = i.CoffeeId,
-				Quantity = i.Quantity,
-				UnitPrice = i.UnitPrice,
-				GlobalId = Random.Shared.NextInt64()
-			});
-			context.OrderItems.AddRange(items);
-			await context.SaveChangesAsync();
+		// Populate Order Map
+		orderMap = await contextLocal.Orders.ToDictionaryAsync(o => (long) o.GlobalId!, o => o.Id);
+
+		if (!contextLocal.OrderItems.Any()) {
+			var globalAsDTOs = await contextGlobal.OrderItems
+				.AsNoTracking()
+				.Select(e => e.ToDTO())
+				.ToArrayAsync();
+
+			Random.Shared.Shuffle(globalAsDTOs);
+
+			var localEntities = globalAsDTOs.Select(dto => {
+				var localItem = Activator.CreateInstance<OrderItem>();
+				dto.ToExisting(localItem);
+
+				localItem.GlobalId = dto.GlobalId;
+
+				// Translate Foreign Keys
+				bool orderExists = orderMap.TryGetValue(dto.OrderId, out var localOrderId);
+				bool coffeeExists = coffeeMap.TryGetValue(dto.CoffeeId, out var localCoffeeId);
+
+				if (orderExists && coffeeExists) {
+					localItem.OrderId = localOrderId;
+					localItem.CoffeeId = localCoffeeId;
+				}
+				return localItem;
+			}).ToArray();
+
+			contextLocal.OrderItems.AddRange(localEntities);
+			await contextLocal.SaveChangesAsync();
 		}
 	}
 }

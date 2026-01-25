@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
-using Models.Entities.DTO; // Added namespace
+using Models.Entities;
 
 namespace Web.Controllers;
 
@@ -41,7 +41,7 @@ public class CoffeeUsersController : Controller {
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	// Changed parameter to CoffeeUserDTO
-	public async Task<IActionResult> Create([Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUserDTO coffeeUser) {
+	public async Task<IActionResult> Create([Bind("FirstName,LastName,GlobalId,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUser coffeeUser) {
 		if (ModelState.IsValid) {
 			// Ensure GlobalId is set
 			coffeeUser.GlobalId = Random.Shared.NextInt64();
@@ -70,7 +70,7 @@ public class CoffeeUsersController : Controller {
 	[HttpPost]
 	[ValidateAntiForgeryToken]
 	// Changed parameter to CoffeeUserDTO
-	public async Task<IActionResult> Edit(long id, [Bind("FirstName,LastName,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUserDTO coffeeUser) {
+	public async Task<IActionResult> Edit(long id, [Bind("FirstName,LastName,GlobalId,CreatedAt,DeletedAt,Id,UserName,NormalizedUserName,Email,NormalizedEmail,EmailConfirmed,PasswordHash,SecurityStamp,ConcurrencyStamp,PhoneNumber,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnd,LockoutEnabled,AccessFailedCount")] CoffeeUser coffeeUser) {
 		if (id != coffeeUser.Id) {
 			return NotFound();
 		}

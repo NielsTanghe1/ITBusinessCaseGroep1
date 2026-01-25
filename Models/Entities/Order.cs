@@ -60,12 +60,11 @@ public class Order : BaseEntity {
 	/// associated with the provided user identifiers.
 	/// </returns>
 	public static Order[] SeedingData(long[] userIds) {
-		Random rnd = new();
 		var orders = new Order[20];
 
 		for (int i = 0; i < orders.Length; i++) {
 			orders[i] = new() {
-				CoffeeUserId = userIds[rnd.Next(userIds.Length)],
+				CoffeeUserId = userIds[Random.Shared.Next(userIds.Length)]
 			};
 		}
 
