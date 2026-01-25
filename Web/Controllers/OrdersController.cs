@@ -13,8 +13,6 @@ using Web.Services;
 
 namespace Web.Controllers;
 
-public record OrderRecord(long coffeeUserId, long id, long coffeeId, CoffeeType type, int quantity, decimal unitPrice);
-
 public class OrdersController : Controller {
 	private readonly LocalDbContext _localContext;
 	private readonly GlobalDbContext _globalContext;
@@ -132,31 +130,14 @@ public class OrdersController : Controller {
 				continue;
 			}
 
-			var message = new OrderRecord(
+			await _utilities.SendMessageTo("OrderSubmitted", new OrderSubmitted(
 				viewModel.CoffeeUserId,
 				item.Id,
 				item.CoffeeId,
 				coffee.Type,
 				item.Quantity,
 				item.UnitPrice
-			);
-
-			var rabbit = _configuration.GetSection("RabbitMQConfig");
-
-			var host = rabbit["Host"];
-			var vhost = rabbit["VirtualHost"] ?? "/";
-			var port = rabbit.GetValue<int?>("Port:Cluster") ?? 5672;
-
-			// Build URI: vhost "/" -> no path, otherwise "/<vhost>"
-			var vhostPath = (string.IsNullOrWhiteSpace(vhost) || vhost == "/")
-				? string.Empty
-				: "/" + vhost.TrimStart('/');
-
-			var uri = new Uri($"rabbitmq://{host}:{port}{vhostPath}/OrderSubmitted");
-
-			var endpoint = await _sendEndpointProvider.GetSendEndpoint(uri);
-			await endpoint.Send(message);
-
+			));
 			total += item.Quantity * item.UnitPrice;
 		}
 		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
