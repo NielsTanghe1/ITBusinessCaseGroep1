@@ -1,0 +1,69 @@
+{
+
+  "messageId": "58550000-0b84-ae86-f56b-08de51c70a83",
+
+  "requestId": null,
+
+  "correlationId": null,
+
+  "conversationId": "58550000-0b84-ae86-81d4-08de51c70a85",
+
+  "initiatorId": null,
+
+  "sourceAddress": "rabbitmq://10.2.160.222/MSI_ITBusinessCase_bus_mbkoyyymo1zep9frbdxfdtzrg6?temporary=true",
+
+  "destinationAddress": "rabbitmq://10.2.160.222/ITBusinessCase.Contracts:OrderSubmitted",
+
+  "responseAddress": null,
+
+  "faultAddress": null,
+
+  "messageType": [
+
+    "urn:message:ITBusinessCase.Contracts:OrderSubmitted"
+
+  ],
+
+  "message": {
+
+    "CoffeeUserId": "0d22e5ba-62f6-45ef-a076-7c00c98bdf15",
+
+    "OrderId": "Robin",
+
+    "CoffeeName": "Coffee",
+
+    "CoffeeType": "Coffee",
+
+    "Quantity": "123",
+
+    "UnitPrice": "12.5"
+
+  },
+
+  "expirationTime": null,
+
+  "sentTime": "2026-01-12T10:40:44.9951083Z",
+
+  "headers": {},
+
+  "host": {
+
+    "machineName": "MSI",
+
+    "processName": "ITBusinessCase",
+
+    "processId": 21848,
+
+    "assembly": "ITBusinessCase",
+
+    "assemblyVersion": "1.0.0.0",
+
+    "frameworkVersion": "9.0.11",
+
+    "massTransitVersion": "8.5.1.0",
+
+    "operatingSystemVersion": "Microsoft Windows NT 10.0.26100.0"
+
+  }
+
+}

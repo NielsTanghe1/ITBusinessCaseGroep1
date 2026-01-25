@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:mqtt3="http://www.mulesoft.org/schema/mule/mqtt3" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mqtt3 http://www.mulesoft.org/schema/mule/mqtt3/current/mule-mqtt3.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
+	<salesforce:sfdc-config name="Salesforce_Connector" doc:name="Salesforce Config" doc:id="f61d21fc-8c93-460d-a8a1-f9db32b719d4" >
+		<salesforce:jwt-connection consumerKey="3MVG9HtWXcDGV.nHW.T1qqWjH2a6CRks_p2G3fttZexWQlXSo9uKomNvhbCUbflIZB7t9dLjKsGjCEUHUq9tE" keyStore="C:\Users\niels\AnypointStudio\studio-workspace\rabbitmq-to-salesforce\src\main\resources\niels.jks" storePassword="addhear" principal="niels.tanghe629@agentforce.com" certificateAlias="niels"/>
+	</salesforce:sfdc-config>
+	<amqp:config name="AMQP_Config" doc:name="AMQP Config" doc:id="81b5428e-d136-4a55-80af-5f5c39483688" >
+		<amqp:connection host="10.2.160.222" port="5672" username="admin" password="curler-squishy-monogamy" />
+	</amqp:config>
+	<flow name="rabbitmq-to-salesforceFlow-Accounts" doc:id="9bfd932e-2284-4754-baa3-813fc869c40a">
+		<amqp:listener doc:name="Listener" doc:id="bc5a64cf-1aee-4784-bb85-0f53d4a79777" config-ref="AMQP_Config" queueName="AccountSubmitted" ackMode="AUTO"/>
+		<ee:transform doc:name="Transform Message" doc:id="309417ae-7b6b-4bbf-af2a-587bd3834a2f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Customer_External_Id__c: payload.message.userId,
+	Name: "Online Customer - " ++ payload.message.firstName ++ " " ++ payload.message.lastName ++" - "++ payload.message.userId,
+	BillingStreet: payload.message.street,
+	BillingCity: payload.message.city,
+	BillingPostalCode: payload.message.postbus,
+	BillingCountry: payload.message.country,
+	ShippingStreet: payload.message.street,
+	ShippingCity: payload.message.city,
+	ShippingPostalCode: payload.message.postbus,
+	ShippingCountry: payload.message.country,
+	Email__c: payload.message.email,
+	AccountNumber: payload.message.userId ++ "CUST",
+	Type: "Online Orders"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0b3fd8f7-8608-485a-b4a9-d653d730d8bf" message="Transformed payload: #[payload]" />
+		<salesforce:upsert doc:name="Upsert" doc:id="1d1337e2-761a-4701-ba24-dd086ed4a49d" config-ref="Salesforce_Connector" objectType="Account" externalIdFieldName="Customer_External_Id__c"/>
+		<logger level="INFO" doc:name="Logger" doc:id="591250e9-16b9-43c3-8d2b-32f93a3430ae" message="SF success: #[payload.successfulResults map ((r) -&gt; r.id)] | SF failures: #[payload.failedResults]"/>
+	</flow>
+	<flow name="rabbitmq-to-salesforceFlow-Orders" doc:id="65174f50-1adb-4dd4-8651-8428eb5a8b74" >
+		<amqp:listener doc:name="Listener" doc:id="ee768385-9f62-475c-8a84-7c6090a128ce" config-ref="AMQP_Config" queueName="OrderSubmitted"/>
+		<logger level="INFO" doc:name="Logger" doc:id="be7e6d35-6237-45fa-a3c3-fd0ef07d453e" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="880b8520-aef9-4461-be61-af1c31f2b0ef">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var userId = payload.message.coffeeUserId as Number
+var coffeeOrderId = payload.message.orderId ++ payload.message.coffeeUserId ++ payload.message.quantity as Number
+var coffeeId = payload.message.coffeeType as Number
+---
+[{
+    Name: "Coffee Order - " ++ coffeeOrderId,
+    Quantity__c: payload.message.quantity,
+    CoffeeType__c: "Placeholder",
+    OrderId__c: coffeeOrderId,
+    UnitPrice__c: payload.message.unitPrice as Number,
+    // Reference by External ID using relationship notation
+    Account__r: {
+        Customer_External_Id__c: userId
+    },
+    Product__r: {
+        Product_External_Id__c: coffeeId
+    }
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d9612d07-7071-44e5-949b-a652be4c70c2" message="Transformed payload: #[payload]" />
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    orderId: payload[0].OrderId__c,&#10;    quantity: payload[0].Quantity__c,&#10;    userId: payload[0].Account__r.Customer_External_Id__c,&#10;    productId: payload[0].Product__r.Product_External_Id__c,&#10;    coffeeType: payload[0].CoffeeType__c,&#10;    unitPrice: payload[0].UnitPrice__c&#10;}]" doc:name="originalOrderData" doc:id="255e3380-6ab3-4367-ba70-0437c8a32056" variableName="originalOrderData"/>
+		<logger level="INFO" doc:name="Logger" doc:id="34fbb141-8ea4-47d5-afd7-d264f6697bc1" message="#[vars.originalOrderData]"/>
+		<salesforce:create doc:name="Create" doc:id="143fd00d-d3fc-476d-802a-3a3df6d9f9a5" config-ref="Salesforce_Connector" type="CoffeeOrder__c"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ac1e000e-50d2-4a93-8f12-9932b08e4b83" message="#[output application/json --- vars.originalOrder]"/>
+		<ee:transform doc:name="Transform Message" doc:id="5edecac0-f540-43fe-8a8b-d016d7577285" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var sfResponse = payload.items[0]
+---
+{
+    // From original order (now simple access)
+    orderId: vars.originalOrderData.orderId,
+    quantity: vars.originalOrderData.quantity,
+    userId: vars.originalOrderData.userId,
+    productId: vars.originalOrderData.productId,
+    
+    // From Salesforce response
+    salesforceId: sfResponse.id,
+    successful: sfResponse.successful,
+    status: if (sfResponse.successful) "confirmed" else "failed",
+    
+    // Include errors if any
+    errors: sfResponse.exception.message default null,
+    
+    // Timestamp
+    timestamp: now()
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<amqp:publish doc:name="Publish" doc:id="cf85a87e-f92a-4f7b-9bbf-48e2207bf137" config-ref="AMQP_Config" exchangeName="OrderConfirmed" deliveryMode="PERSISTENT"/>
+		<logger level="INFO" doc:name="Logger1" doc:id="02e185f6-6b74-426a-94cc-0fb78136274d" message="#[payload]" />
+	</flow>
+</mule>

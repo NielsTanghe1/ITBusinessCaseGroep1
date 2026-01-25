@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="order" format="json">
+      <types:shape format="weave" example="examples/OrderPayload-1.json"><![CDATA[%dw 2.0
+
+type order = {|
+  messageId: String, 
+  requestId: Null, 
+  correlationId: Null, 
+  conversationId: String, 
+  initiatorId: Null, 
+  sourceAddress: String, 
+  destinationAddress: String, 
+  responseAddress: Null, 
+  faultAddress: Null, 
+  messageType: Array<String>, 
+  message: {|
+    CoffeeUserId: String, 
+    OrderId: String, 
+    CoffeeId: String, 
+    CoffeeType: String, 
+    Quantity: String, 
+    UnitPrice: String
+  |}, 
+  expirationTime: Null, 
+  sentTime: String, 
+  headers: {|  |}, 
+  host: {|
+    machineName: String, 
+    processName: String, 
+    processId: Number {"typeId": "int"}, 
+    assembly: String, 
+    assemblyVersion: String, 
+    frameworkVersion: String, 
+    massTransitVersion: String, 
+    operatingSystemVersion: String
+  |}
+|} {"example": "{\\\"messageId\\\":\\\"58550000-0b84-ae86-f56b-08de51c70a83\\\",\\\"requestId\\\":null,\\\"correlationId\\\":null,\\\"conversationId\\\":\\\"58550000-0b84-ae86-81d4-08de51c70a85\\\",\\\"initiatorId\\\":null,\\\"sourceAddress\\\":\\\"rabbitmq:\\/\\/10.2.160.222\\/MSI_ITBusinessCase_bus_mbkoyyymo1zep9frbdxfdtzrg6?temporary=true\\\",\\\"destinationAddress\\\":\\\"rabbitmq:\\/\\/10.2.160.222\\/ITBusinessCase.Contracts:OrderSubmitted\\\",\\\"responseAddress\\\":null,\\\"faultAddress\\\":null,\\\"messageType\\\":[\\\"urn:message:ITBusinessCase.Contracts:OrderSubmitted\\\"],\\\"message\\\":{\\\"CoffeeUserId\\\":\\\"0d22e5ba-62f6-45ef-a076-7c00c98bdf15\\\",\\\"OrderId\\\":\\\"Robin\\\",\\\"CoffeeId\\\":\\\"1\\\",\\\"CoffeeType\\\":\\\"Coffee\\\",\\\"Quantity\\\":\\\"123\\\",\\\"UnitPrice\\\":\\\"12.5\\\"},\\\"expirationTime\\\":null,\\\"sentTime\\\":\\\"2026-01-12T10:40:44.9951083Z\\\",\\\"headers\\\":{},\\\"host\\\":{\\\"machineName\\\":\\\"MSI\\\",\\\"processName\\\":\\\"ITBusinessCase\\\",\\\"processId\\\":21848,\\\"assembly\\\":\\\"ITBusinessCase\\\",\\\"assemblyVersion\\\":\\\"1.0.0.0\\\",\\\"frameworkVersion\\\":\\\"9.0.11\\\",\\\"massTransitVersion\\\":\\\"8.5.1.0\\\",\\\"operatingSystemVersion\\\":\\\"Microsoft Windows NT 10.0.26100.0\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="User" format="json">
+      <types:shape format="weave" example="examples/payload-3.json"><![CDATA[%dw 2.0
+
+type User = {|
+  messageId: String, 
+  requestId: Null, 
+  correlationId: Null, 
+  conversationId: String, 
+  initiatorId: Null, 
+  sourceAddress: String, 
+  destinationAddress: String, 
+  responseAddress: Null, 
+  faultAddress: Null, 
+  messageType: Array<String>, 
+  message: {|
+    userId: String, 
+    orderId: String, 
+    firstName: String, 
+    lastName: String, 
+    email: String, 
+    street: String, 
+    postbus: String, 
+    city: String, 
+    postcode: String, 
+    country: String, 
+    total: String, 
+    lines: Array<{|      productId: String,       productName: String,       unitPrice: String,       quantity: Number {"typeId": "int"},       lineTotal: String    |}>
+  |}, 
+  expirationTime: Null, 
+  sentTime: String, 
+  headers: {|  |}, 
+  host: {|
+    machineName: String, 
+    processName: String, 
+    processId: Number {"typeId": "int"}, 
+    assembly: String, 
+    assemblyVersion: String, 
+    frameworkVersion: String, 
+    massTransitVersion: String, 
+    operatingSystemVersion: String
+  |}
+|} {"example": "{\\\"messageId\\\":\\\"58550000-0b84-ae86-f56b-08de51c70a83\\\",\\\"requestId\\\":null,\\\"correlationId\\\":null,\\\"conversationId\\\":\\\"58550000-0b84-ae86-81d4-08de51c70a85\\\",\\\"initiatorId\\\":null,\\\"sourceAddress\\\":\\\"rabbitmq:\\/\\/10.2.160.222\\/MSI_ITBusinessCase_bus_mbkoyyymo1zep9frbdxfdtzrg6?temporary=true\\\",\\\"destinationAddress\\\":\\\"rabbitmq:\\/\\/10.2.160.222\\/ITBusinessCase.Contracts:OrderSubmitted\\\",\\\"responseAddress\\\":null,\\\"faultAddress\\\":null,\\\"messageType\\\":[\\\"urn:message:ITBusinessCase.Contracts:OrderSubmitted\\\"],\\\"message\\\":{\\\"userId\\\":\\\"0d22e5ba-62f6-45ef-a076-7c00c98bdf15\\\",\\\"orderId\\\":\\\"0d22e5ba-62f6-45ef-a076-7c00c98bdf15\\\",\\\"firstName\\\":\\\"Robin\\\",\\\"lastName\\\":\\\"De Wolf\\\",\\\"email\\\":\\\"robindw55@gmail.com\\\",\\\"street\\\":\\\"Kleine Molenstraat 30\\\",\\\"postbus\\\":\\\"1502\\\",\\\"city\\\":\\\"Halle\\\",\\\"postcode\\\":\\\"1502\\\",\\\"country\\\":\\\"Belgium\\\",\\\"total\\\":\\\"3.20\\\",\\\"lines\\\":[{\\\"productId\\\":\\\"cappuccino\\\",\\\"productName\\\":\\\"Cappuccino\\\",\\\"unitPrice\\\":\\\"3.20\\\",\\\"quantity\\\":1,\\\"lineTotal\\\":\\\"3.20\\\"}]},\\\"expirationTime\\\":null,\\\"sentTime\\\":\\\"2026-01-12T10:40:44.9951083Z\\\",\\\"headers\\\":{},\\\"host\\\":{\\\"machineName\\\":\\\"MSI\\\",\\\"processName\\\":\\\"ITBusinessCase\\\",\\\"processId\\\":21848,\\\"assembly\\\":\\\"ITBusinessCase\\\",\\\"assemblyVersion\\\":\\\"1.0.0.0\\\",\\\"frameworkVersion\\\":\\\"9.0.11\\\",\\\"massTransitVersion\\\":\\\"8.5.1.0\\\",\\\"operatingSystemVersion\\\":\\\"Microsoft Windows NT 10.0.26100.0\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#880b8520-aef9-4461-be61-af1c31f2b0ef">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="order"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#309417ae-7b6b-4bbf-af2a-587bd3834a2f">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="User"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
