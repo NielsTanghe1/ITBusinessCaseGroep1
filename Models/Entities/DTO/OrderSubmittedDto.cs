@@ -1,4 +1,4 @@
-﻿namespace Models.Entities.DTO;
+﻿namespace Models.Entities.Records;
 
 public class OrderSubmittedDto {
 	public string? OrderId {

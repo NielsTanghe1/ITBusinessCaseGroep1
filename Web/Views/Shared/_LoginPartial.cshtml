@@ -6,7 +6,7 @@
 
 @if (SignInManager.IsSignedIn(User)) {
 	<li class="nav-item text-muted small">
-		<p id="manage" class="nav-link text-dark">Welkom @UserManager.GetUserName(User)!</p>
+		<p class="nav-link text-dark">Welkom @UserManager.GetUserName(User)!</p>
 	</li>
 	<li class="nav-item">
 		<!-- "form-inline" is a class -->

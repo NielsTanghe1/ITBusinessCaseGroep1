@@ -1,14 +1,26 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Models.Data;
+using Models.Entities;
 
 namespace Web.Controllers;
 
 public class HomeController : Controller {
 	private readonly ILogger<HomeController> _logger;
 	private readonly IConfiguration _configuration;
+	private readonly UserManager<CoffeeUser> _userManager;
+	private readonly LocalDbContext _localContext;
 
-	public HomeController(ILogger<HomeController> logger, IConfiguration configuration) {
+	public HomeController(
+		ILogger<HomeController> logger,
+		IConfiguration configuration,
+		UserManager<CoffeeUser> userManager,
+		LocalDbContext localContext) {
 		_logger = logger;
 		_configuration = configuration;
+		_userManager = userManager;
+		_localContext = localContext;
 	}
 
 	public IActionResult Index() {
@@ -49,4 +61,35 @@ public class HomeController : Controller {
 	//	TempData["Message"] = "Order sent to RabbitMQ!";
 	//	return RedirectToAction("Index");
 	//}
+
+	public async Task<IActionResult> MyOrders() {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null) {
+			return Challenge();
+		}
+
+		var email = user.Email ?? user.UserName ?? "";
+
+		var orders = await _localContext.Orders
+			.Where(o => o.CoffeeUser.Email == email)
+			.OrderByDescending(o => o.CreatedAt)
+			.ToListAsync();
+
+		return View(orders);
+	}
+
+	public async Task<IActionResult> MyOrderDetails(int id) {
+		var user = await _userManager.GetUserAsync(User);
+		if (user == null)
+			return Challenge();
+
+		var email = user.Email ?? user.UserName ?? "";
+
+		var order = await _localContext.Orders.FirstOrDefaultAsync(o => o.Id == id && o.CoffeeUser.Email == email);
+		if (order == null) {
+			return NotFound();
+		}
+
+		return View(order);
+	}
 }

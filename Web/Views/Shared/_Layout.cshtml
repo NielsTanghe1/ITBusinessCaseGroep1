@@ -15,13 +15,13 @@
 			<div class="container-fluid">
 				<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Web</a>
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-						  aria-controls="navbarSupportedContent"
-						  aria-expanded="false" aria-label="Toggle navigation">
+						aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
 
 				<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-					<!-- Links -->
+					<!-- Left-hand side -->
 					<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 						<li class="nav-item">
 							<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
@@ -31,30 +31,25 @@
 						</li>
 					</ul>
 
-					<!-- Rechts -->
+					<!-- Right-hand side -->
 					<ul class="navbar-nav ms-auto align-items-center gap-2">
 						@if (User.Identity?.IsAuthenticated == true) {
-							<!-- Profiel -->
+							<!-- Profile section -->
 							<li class="nav-item">
-								<a class="btn btn-outline-primary btn-sm"
-									asp-controller="Profile"
-									asp-action="Edit">
-									Profiel
-								</a>
+								<a id="manage" class="btn btn-outline-primary btn-sm" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Profiel</a>
 							</li>
 
-							<!-- Mijn bestellingen -->
+							<!-- Orders section -->
 							<li class="nav-item">
 								<a class="btn btn-outline-success btn-sm"
-									asp-controller="Profile"
+									asp-controller="Home"
 									asp-action="MyOrders">
 									Mijn bestellingen
 								</a>
 							</li>
 
-							@* Admin knop alleen voor Admins *@
-							@if (User.IsInRole("Admin"))
-							{
+							<!-- Admins section -->
+							@if (User.IsInRole("Admin")) {
 								<li class="nav-item">
 									<a class="btn btn-outline-danger btn-sm"
 										asp-controller="Admin"

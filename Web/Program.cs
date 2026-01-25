@@ -46,7 +46,8 @@ builder.Services
 		 options.User.RequireUniqueEmail = true;
 		 options.SignIn.RequireConfirmedAccount = false;
 	 })
-	 .AddEntityFrameworkStores<LocalDbContext>();
+	 .AddEntityFrameworkStores<LocalDbContext>()
+	 .AddDefaultUI();
 
 // MVC
 builder.Services.AddControllersWithViews();

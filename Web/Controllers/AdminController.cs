@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities;
-using Models.Entities.DTO;
 using Web.Models;
+using Models.Entities.Records;
 
 namespace Web.Controllers;
 

@@ -1,4 +1,4 @@
-﻿using Models.Entities.DTO;
+﻿using Models.Entities.Records;
 
 namespace Web.Models;
 

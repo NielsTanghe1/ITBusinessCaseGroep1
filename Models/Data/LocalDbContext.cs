@@ -18,6 +18,13 @@ public class LocalDbContext : BaseIdentityDbContext {
 	/// </summary>
 	public LocalDbContext() : base() { }
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LocalDbContext"/> class
+	/// with the specified configuration.
+	/// </summary>
+	/// <param name="options">
+	/// The configuration options for this database context.
+	/// </param>
 	public LocalDbContext(DbContextOptions<LocalDbContext> options) : base(options) { }
 
 	/// <summary>
