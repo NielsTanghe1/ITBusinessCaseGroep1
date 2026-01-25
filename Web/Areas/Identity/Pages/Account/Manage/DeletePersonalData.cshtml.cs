@@ -16,32 +16,20 @@ public class DeletePersonalDataModel : PageModel {
 	private readonly ILogger<DeletePersonalDataModel> _logger;
 
 	public DeletePersonalDataModel(
-		 UserManager<CoffeeUser> userManager,
-		 SignInManager<CoffeeUser> signInManager,
-		 ILogger<DeletePersonalDataModel> logger) {
+		UserManager<CoffeeUser> userManager,
+		SignInManager<CoffeeUser> signInManager,
+		ILogger<DeletePersonalDataModel> logger) {
 		_userManager = userManager;
 		_signInManager = signInManager;
 		_logger = logger;
 	}
 
-	/// <summary>
-	///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-	///     directly from your code. This API may change or be removed in future releases.
-	/// </summary>
 	[BindProperty]
 	public InputModel Input {
 		get; set;
 	}
 
-	/// <summary>
-	///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-	///     directly from your code. This API may change or be removed in future releases.
-	/// </summary>
 	public class InputModel {
-		/// <summary>
-		///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-		///     directly from your code. This API may change or be removed in future releases.
-		/// </summary>
 		[Required]
 		[DataType(DataType.Password)]
 		public string Password {
@@ -49,10 +37,6 @@ public class DeletePersonalDataModel : PageModel {
 		}
 	}
 
-	/// <summary>
-	///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-	///     directly from your code. This API may change or be removed in future releases.
-	/// </summary>
 	public bool RequirePassword {
 		get; set;
 	}

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities;
+using Models.Entities.DTO;
+using Web.Models;
 
 namespace Web.Controllers;
 
@@ -143,105 +145,5 @@ public class AdminController : Controller {
 		} catch {
 			return null;
 		}
-	}
-}
-
-public class CreateUserViewModel {
-	public string FirstName { get; set; } = "";
-	public string LastName { get; set; } = "";
-	public string Email { get; set; } = "";
-	public string Password { get; set; } = "";
-	public string? Role {
-		get; set;
-	}
-}
-
-public class AdminOrderListItemViewModel {
-	public int Id {
-		get; set;
-	}
-	public string OrderId { get; set; } = "";
-	public string Status { get; set; } = "";
-	public DateTime CreatedAtUtc {
-		get; set;
-	}
-	public string FullName { get; set; } = "";
-	public string Email { get; set; } = "";
-	public decimal? Total {
-		get; set;
-	}
-}
-
-public class AdminOrderDetailsViewModel {
-	public int Id {
-		get; set;
-	}
-	public string OrderId { get; set; } = "";
-	public string Status { get; set; } = "";
-	public DateTime CreatedAtUtc {
-		get; set;
-	}
-	public string RawJson { get; set; } = "";
-	public OrderSubmittedDto? Payload {
-		get; set;
-	}
-}
-
-// Fixed DTO to use OrderLineJsonDto instead of OrderDTO (which is now an Entity)
-public class OrderSubmittedDto {
-	public string? OrderId {
-		get; set;
-	}
-	public string? FirstName {
-		get; set;
-	}
-	public string? LastName {
-		get; set;
-	}
-	public string? Email {
-		get; set;
-	}
-
-	public string? Street {
-		get; set;
-	}
-	public string? Postbus {
-		get; set;
-	}
-	public string? City {
-		get; set;
-	}
-	public string? Postcode {
-		get; set;
-	}
-	public string? Country {
-		get; set;
-	}
-
-	public decimal? Total {
-		get; set;
-	}
-	public List<OrderLineJsonDto>? Lines {
-		get; set;
-	}
-}
-
-// New class to represent the line items in the JSON payload
-public class OrderLineJsonDto {
-	public long CoffeeUserId {
-		get; set;
-	}
-	public long OrderId {
-		get; set;
-	}
-	public long CoffeeId {
-		get; set;
-	}
-	public string CoffeeType { get; set; } = "";
-	public int Quantity {
-		get; set;
-	}
-	public decimal UnitPrice {
-		get; set;
 	}
 }

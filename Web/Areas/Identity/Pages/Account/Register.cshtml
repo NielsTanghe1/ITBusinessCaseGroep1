@@ -1,0 +1,62 @@
+﻿@page
+@model RegisterModel
+@{
+	ViewData["Title"] = "Account aanmaken";
+}
+
+<div class="row justify-content-center">
+	<div class="col-md-6">
+		<div class="card shadow-sm">
+			<div class="card-body">
+				<h2 class="card-title mb-3">Account aanmaken</h2>
+
+				<form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+					<div class="mb-3">
+						<label class="form-label">Email</label>
+						<input asp-for="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="jeff.marlboro@example.com" />
+						<span asp-validation-for="Input.Email" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label">Email</label>
+						<input asp-for="Input.FirstName" class="form-control" autocomplete="first-name" aria-required="true" placeholder="Jeff" />
+						<span asp-validation-for="Input.FirstName" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label">Email</label>
+						<input asp-for="Input.LastName" class="form-control" autocomplete="last-name" aria-required="true" placeholder="Marlboro" />
+						<span asp-validation-for="Input.LastName" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label">Wachtwoord</label>
+						<input asp-for="Input.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+						<span asp-validation-for="Input.Password" class="text-danger"></span>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label">Bevestig wachtwoord</label>
+						<input asp-for="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+						<span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+					</div>
+
+					<button id="registerSubmit" type="submit" class="btn btn-success w-100">Registreren</button>
+				</form>
+
+				<hr />
+
+				<div class="d-flex justify-content-between">
+					<span>Al een account?</span>
+					<a id="login" asp-area="Identity" asp-page="/Account/Login">Inloggen</a>
+				</div>
+
+				<div asp-validation-summary="All" class="text-danger mt-3"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

@@ -103,4 +103,38 @@ public static class CoffeeUserMappingExtensions {
 		target.CreatedAt = model.CreatedAt;
 		target.DeletedAt = model.DeletedAt;
 	}
+
+	/// <summary>
+	/// Creates a shallow, untracked, copy of a <see cref="CoffeeUser"/> to a new <see cref="CoffeeUser"/> entity model.
+	/// </summary>
+	/// <param name="model">
+	/// The source <see cref="CoffeeUser"/> to convert.
+	/// </param>
+	/// <returns>
+	/// A populated <see cref="CoffeeUser"/> instance.
+	/// </returns>
+	/// <exception cref="ArgumentNullException">
+	/// Thrown when <paramref name="model"/> is null.
+	/// </exception>
+	public static CoffeeUser ShallowCopy(this CoffeeUser model) {
+		// Throwing here guarantees the return is never null to the caller
+		ArgumentNullException.ThrowIfNull(model);
+
+		return new() {
+			Id = model.GlobalId ?? 0L,
+			FirstName = model.FirstName,
+			LastName = model.LastName,
+			UserName = model.UserName,
+			Email = model.Email,
+			EmailConfirmed = model.EmailConfirmed,
+			PhoneNumber = model.PhoneNumber,
+			PhoneNumberConfirmed = model.PhoneNumberConfirmed,
+			TwoFactorEnabled = model.TwoFactorEnabled,
+			LockoutEnd = model.LockoutEnd,
+			LockoutEnabled = model.LockoutEnabled,
+			AccessFailedCount = model.AccessFailedCount,
+			CreatedAt = model.CreatedAt,
+			DeletedAt = model.DeletedAt
+		};
+	}
 }
