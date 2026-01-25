@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
 using Web.Services;
+using Web.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 bool isDebugging = bool.TryParse(builder.Configuration["GlobalAppSettings:IsDebugging"], out bool isDebuggingResult);
@@ -61,6 +62,9 @@ builder.Services.AddRazorPages();
 // MASS TRANSIT + RABBITMQ
 // =======================
 builder.Services.AddMassTransit(x => {
+	// Register the OrderConfirmed consumer
+	x.AddConsumer<OrderConfirmedConsumer>();
+
 	x.UsingRabbitMq((context, cfg) => {
 		var rabbit = builder.Configuration.GetSection("RabbitMQConfig");
 
@@ -86,6 +90,12 @@ builder.Services.AddMassTransit(x => {
 				h.Username(username);
 				h.Password(password);
 			}
+		});
+
+		// Configure the OrderConfirmed queue endpoint
+		cfg.ReceiveEndpoint("OrderConfirmed", e => {
+			e.UseRawJsonDeserializer(RawSerializerOptions.AnyMessageType);
+			e.ConfigureConsumer<OrderConfirmedConsumer>(context);
 		});
 	});
 });

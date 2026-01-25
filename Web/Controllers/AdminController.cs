@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Entities;
 using Web.Models;
 using Models.Entities.Records;
+using Web.Consumers;
 
 namespace Web.Controllers;
 
@@ -133,6 +134,14 @@ public class AdminController : Controller {
 	// -------------------
 	public async Task<IActionResult> OrderDetails(int id) {
 		return Ok();
+	}
+
+	// -------------------
+	// CONFIRMED ORDERS (from Queue)
+	// -------------------
+	public IActionResult ConfirmedOrders() {
+		var confirmedOrders = OrderConfirmedConsumer.ReceivedOrders.ToList();
+		return View(confirmedOrders);
 	}
 
 	private static readonly JsonSerializerOptions _jsonOptions = new() {

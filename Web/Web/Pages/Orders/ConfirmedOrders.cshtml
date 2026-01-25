@@ -1,0 +1,46 @@
+@page
+@model Web.Pages.Orders.ConfirmedOrdersModel
+@{
+	ViewData["Title"] = "Confirmed Orders";
+}
+
+<div class="container mt-4">
+	<h1 class="mb-4">Confirmed Orders from Queue</h1>
+
+	@if (!Model.Orders.Any()) {
+		<div class="alert alert-info" role="alert">
+			<i class="bi bi-info-circle"></i> No confirmed orders found in the queue yet.
+		</div>
+	} else {
+		<div class="table-responsive">
+			<table class="table table-striped table-hover">
+				<thead class="table-dark">
+					<tr>
+						<th>Order ID</th>
+						<th>User ID</th>
+						<th>Status</th>
+						<th>Confirmed At</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var order in Model.Orders) {
+						<tr>
+							<td>@order.OrderId</td>
+							<td>@order.CoffeeUserId</td>
+							<td>
+								<span class="badge bg-success">@order.Status</span>
+							</td>
+							<td>@order.ConfirmedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="alert alert-light mt-3">
+			<strong>Total Orders:</strong> @Model.Orders.Count
+		</div>
+	}
+
+	<a asp-controller="Home" asp-action="Index" class="btn btn-secondary mt-3">Back to Home</a>
+</div>
