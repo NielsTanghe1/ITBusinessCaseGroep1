@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Models.Migrations.GlobalDb
+namespace Models.Migrations
 {
     /// <inheritdoc />
-    public partial class RenamePriceAtPurchaseToUnitPrice : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,6 +48,7 @@ namespace Models.Migrations.GlobalDb
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
                     AccessFailedCount = table.Column<int>(type: "int", nullable: false),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -65,6 +66,7 @@ namespace Models.Migrations.GlobalDb
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -108,6 +110,7 @@ namespace Models.Migrations.GlobalDb
                     PostalCode = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     CountryISO = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     UnitNumber = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -215,6 +218,7 @@ namespace Models.Migrations.GlobalDb
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CoffeeUserId = table.Column<long>(type: "bigint", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -236,9 +240,10 @@ namespace Models.Migrations.GlobalDb
                     PaymentDetailId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CoffeeUserId = table.Column<long>(type: "bigint", nullable: false),
-                    LastFour = table.Column<int>(type: "int", nullable: false),
+                    LastFour = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    GatewayToken = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GatewayToken = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -263,6 +268,7 @@ namespace Models.Migrations.GlobalDb
                     CoffeeId = table.Column<long>(type: "bigint", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GlobalId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },

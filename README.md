@@ -70,6 +70,11 @@ Depending on the configuration, ensure RabbitMQ and Salesforce credentials are a
 * Microsoft .NET Documentation
 * [Inject JavaScript to open a URL](https://stackoverflow.com/a/79306770)
 * [Install SQL Server on Ubuntu](https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-ubuntu?view=sql-server-ver17&tabs=ubuntu2004%2C2505ubuntu2404%2Codbc-ubuntu-2404)
+* ["Optional" inheriting method](https://stackoverflow.com/a/38841122)
+
+### Interesting
+
+* [general map method](https://stackoverflow.com/a/76894702)
 
 ### Used NuGet packages
 

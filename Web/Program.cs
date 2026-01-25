@@ -109,6 +109,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope()) {
 	var services = scope.ServiceProvider;
 	try {
+		await GlobalDbContext.Seeder(services);
 		await LocalDbContext.Seeder(services);
 	} catch (Exception ex) {
 		var logger = services.GetRequiredService<ILogger<Program>>();
@@ -126,12 +127,8 @@ if (!app.Environment.IsDevelopment()) {
 	app.UseHsts();
 }
 
-// ✅ Nodig voor wwwroot/images/css/js
+app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-// Als je enkel HTTP gebruikt, laat deze uit
-// app.UseHttpsRedirection();
-
 app.UseRouting();
 app.UseAuthorization();
 
