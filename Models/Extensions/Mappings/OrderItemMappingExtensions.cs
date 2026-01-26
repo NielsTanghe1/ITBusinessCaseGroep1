@@ -5,9 +5,13 @@ namespace Models.Extensions.Mappings;
 
 /// <summary>
 /// Contains extension methods for transforming <see cref="OrderItem"/>
-/// and <see cref="OrderItemDTO"/> entities, including creating new
-/// model instances, converting them to DTOs, and updating existing
-/// models based on DTO data.
+/// and <see cref="OrderItemDTO"/> entities, including:
+/// <list type = "bullet" >
+/// <item><description>Creating new model instances.</description></item>
+/// <item><description>Converting model instances to DTOs.</description></item>
+/// <item><description>Updating existing model instances based on DTO data.</description></item>
+/// <item><description>Creating a shallow, untracked copy of a model instance into a new one.</description></item>
+/// </list>
 /// </summary>
 public static class OrderItemMappingExtensions {
 	/// <summary>
@@ -81,5 +85,36 @@ public static class OrderItemMappingExtensions {
 		target.UnitPrice = model.UnitPrice;
 		target.CreatedAt = model.CreatedAt;
 		target.DeletedAt = model.DeletedAt;
+	}
+
+	/// <summary>
+	/// Creates a shallow, untracked copy of a <see cref="OrderItem"/> into a new <see cref="OrderItem"/> instance.
+	/// </summary>
+	/// <param name="model">
+	/// The source <see cref="OrderItem"/> entity to copy.
+	/// </param>
+	/// <returns>
+	/// A new <see cref="OrderItem"/> instance with identical property values, 
+	/// but detached from any <c>DbContext</c> tracking.
+	/// </returns>
+	/// <remarks>
+	/// This is a shallow copy; reference navigation properties are shared between instances. 
+	/// Useful for transferring data between a local and global database context.
+	/// </remarks>
+	/// <exception cref="ArgumentNullException">
+	/// Thrown when <paramref name="model"/> is <see langword="null"/>.
+	/// </exception>
+	public static OrderItem ShallowCopy(this OrderItem model) {
+		// Throwing here guarantees the return is never null to the caller
+		ArgumentNullException.ThrowIfNull(model);
+
+		return new() {
+			OrderId = model.OrderId,
+			CoffeeId = model.CoffeeId,
+			Quantity = model.Quantity,
+			UnitPrice = model.UnitPrice,
+			CreatedAt = model.CreatedAt,
+			DeletedAt = model.DeletedAt
+		};
 	}
 }

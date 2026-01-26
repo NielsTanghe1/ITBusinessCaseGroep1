@@ -12,7 +12,15 @@ namespace Models.Entities;
 /// The <see cref="DeletedAt"/> property can be set to indicate when the entity was deleted,
 /// or left <see langword="null"/> if the entity is active.
 /// </remarks>
-public abstract class BaseEntity {
+public abstract class BaseEntity : IBaseEntity {
+	/// <summary>
+	/// Gets or sets the primary key of this entity.
+	/// </summary>
+	[Key]
+	public abstract long Id {
+		get; init;
+	}
+
 	/// <summary>
 	/// Gets or sets the globally unique identifier for the entity.
 	/// </summary>

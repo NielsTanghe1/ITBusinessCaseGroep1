@@ -20,7 +20,7 @@ public class Address : BaseEntity {
 	/// </summary>
 	[Key]
 	[Display(Name = "AddressId")]
-	public long Id {
+	public override long Id {
 		get; init;
 	}
 

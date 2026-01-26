@@ -5,9 +5,13 @@ namespace Models.Extensions.Mappings;
 
 /// <summary>
 /// Contains extension methods for transforming <see cref="CoffeeUser"/>
-/// and <see cref="CoffeeUserDTO"/> entities, including creating new
-/// model instances, converting them to DTOs, and updating existing
-/// models based on DTO data.
+/// and <see cref="CoffeeUserDTO"/> entities, including:
+/// <list type = "bullet" >
+/// <item><description>Creating new model instances.</description></item>
+/// <item><description>Converting model instances to DTOs.</description></item>
+/// <item><description>Updating existing model instances based on DTO data.</description></item>
+/// <item><description>Creating a shallow, untracked copy of a model instance into a new one.</description></item>
+/// </list>
 /// </summary>
 public static class CoffeeUserMappingExtensions {
 	/// <summary>
@@ -105,23 +109,27 @@ public static class CoffeeUserMappingExtensions {
 	}
 
 	/// <summary>
-	/// Creates a shallow, untracked, copy of a <see cref="CoffeeUser"/> to a new <see cref="CoffeeUser"/> entity model.
+	/// Creates a shallow, untracked copy of a <see cref="CoffeeUser"/> into a new <see cref="CoffeeUser"/> instance.
 	/// </summary>
 	/// <param name="model">
-	/// The source <see cref="CoffeeUser"/> to convert.
+	/// The source <see cref="CoffeeUser"/> entity to copy.
 	/// </param>
 	/// <returns>
-	/// A populated <see cref="CoffeeUser"/> instance.
+	/// A new <see cref="CoffeeUser"/> instance with identical property values, 
+	/// but detached from any <c>DbContext</c> tracking.
 	/// </returns>
+	/// <remarks>
+	/// This is a shallow copy; reference navigation properties are shared between instances. 
+	/// Useful for transferring data between a local and global database context.
+	/// </remarks>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="model"/> is null.
+	/// Thrown when <paramref name="model"/> is <see langword="null"/>.
 	/// </exception>
 	public static CoffeeUser ShallowCopy(this CoffeeUser model) {
 		// Throwing here guarantees the return is never null to the caller
 		ArgumentNullException.ThrowIfNull(model);
 
 		return new() {
-			Id = model.GlobalId ?? 0L,
 			FirstName = model.FirstName,
 			LastName = model.LastName,
 			UserName = model.UserName,
