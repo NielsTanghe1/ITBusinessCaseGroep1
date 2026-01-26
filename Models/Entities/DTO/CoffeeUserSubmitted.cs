@@ -5,8 +5,8 @@ public record CoffeeUserSubmitted(
 	string Email,
 	string FirstName,
 	string LastName,
-	string Street,
-	string City,
-	int HouseNumber,
-	string Country
+	string? Street,
+	string? City,
+	string? PostalCode,
+	string? Country
 );

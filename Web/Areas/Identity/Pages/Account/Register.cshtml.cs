@@ -90,7 +90,7 @@ public class RegisterModel : PageModel {
 
 	public async Task<IActionResult> OnPostAsync(string returnUrl = null) {
 		/* 
-		 * PROCESS: 
+		 * PROCESS:
 		 * 1. Create a local CoffeeUser account.
 		 * 2. Synchronize to backup database to obtain a GlobalID.
 		 * 3. Finalize local account with Global link and establish session.
@@ -122,16 +122,15 @@ public class RegisterModel : PageModel {
 
 			if (updateResult.Succeeded) {
 				// 3. Send a message to RabbitMQ to notify subscribers
-				var address = _contextGlobal.Addresses.First(e => e.CoffeeUserId == globalUser.Id);
-				await _utilities.SendMessageTo("UserSubmitted", new CoffeeUserSubmitted(
+				await _utilities.SendMessageTo("AccountSubmitted", new CoffeeUserSubmitted(
 					globalUser.Id,
 					globalUser.Email,
 					globalUser.FirstName,
 					globalUser.LastName,
-					address.Street,
-					address.City,
-					address.HouseNumber,
-					address.CountryISO
+					null,
+					null,
+					null,
+					null
 				));
 
 				// 4. Only sign in once BOTH databases are consistent
