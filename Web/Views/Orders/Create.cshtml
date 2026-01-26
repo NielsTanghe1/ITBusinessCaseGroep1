@@ -97,8 +97,7 @@
 														  id=@($"sel_{type}_{name}")
 														  data-coffeeId="@coffee.Id"
 														  data-price="@coffee.Price"
-														  style="width: 84px;"
-														  onchange="changeUnitQuantity(0, '@(type)_@(name)', event)">
+														  style="width: 84px;">
 
 													@for (quantity = 0; quantity <= 26; quantity++) {
 														<option value="@quantity">@quantity Kg</option>
@@ -369,9 +368,8 @@
 				if (quantity > 0) totalPrice += quantity * parseFloat(item.price);
 			});
 
-			const value = totalQuantity.toFixed(2);
-			if (cartTotal) cartTotal.innerText = totalQuantity;
-			if (cartTotal2) cartTotal2.innerText = totalQuantity;
+			if (cartTotal) cartTotal.innerText = totalPrice.toFixed(2);
+			if (cartTotal2) cartTotal2.innerText = totalPrice.toFixed(2);
 
 			if (!badge) return;
 			badge.innerText = totalQuantity.toString();

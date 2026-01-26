@@ -24,7 +24,7 @@ public class IndexModel : PageModel {
 		SignInManager<CoffeeUser> signInManager,
 		LocalDbContext localContext,
 		GlobalDbContext globalContext,
-		Utilities utilities) {
+		Utilities utilities) {		
 		_userManager = userManager;
 		_signInManager = signInManager;
 		_localContext = localContext;
