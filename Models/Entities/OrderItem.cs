@@ -20,7 +20,7 @@ public class OrderItem : BaseEntity {
 	/// </summary>
 	[Key]
 	[Display(Name = "OrderItemId")]
-	public long Id {
+	public override long Id {
 		get; init;
 	}
 

@@ -200,7 +200,9 @@ public class LocalDbContext : BaseIdentityDbContext {
 		}
 
 		// Populate Order Map
-		orderMap = await contextLocal.Orders.ToDictionaryAsync(o => (long) o.GlobalId!, o => o.Id);
+		orderMap = await contextLocal.Orders
+	 .Where(o => o.GlobalId != null) // Filter out local-only orders
+	 .ToDictionaryAsync(o => (long) o.GlobalId!, o => o.Id);
 
 		if (!contextLocal.OrderItems.Any()) {
 			var globalAsDTOs = await contextGlobal.OrderItems

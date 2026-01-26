@@ -1,6 +1,41 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+	ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5">
+            <h1 class="display-5 mb-4">@ViewData["Title"]</h1>
+            <p class="text-muted">Laatst aangepast: Januari 2026</p>
 
-<p>Use this page to detail your site's privacy policy.</p>
+            <section class="mb-5">
+                <h4>1. Informatie die we bijhouden</h4>
+                <p>Om uw bestellingen via ons berichtensysteem te verwerken, verzamelen we de volgende informatie:</p>
+                <ul>
+                    <li><strong>Persoonlijke Identificatie:</strong> Voornaam en achternaam.</li>
+                    <li><strong>Contactinformatie:</strong> E-mailadres voor orderbevestigingen.</li>
+                    <li><strong>Verzendgegevens:</strong> Straatnaam, stad, postcode en land.</li>
+                    <li><strong>Financiële Gegevens:</strong> Kaartnummer en CVV voor betalingsverificatie.</li>
+                </ul>
+            </section>
+
+            <section class="mb-5">
+                <h4>2. Hoe we uw gegevens gebruiken</h4>
+                <p>Uw gegevens worden gepubliceerd naar een beveiligde <strong>RabbitMQ</strong> broker. Van daaruit worden ze gedistribueerd naar onze interne abonnees:</p>
+                <ul>
+                    <li><strong>Salesforce:</strong> Om onze klantrelaties te beheren.</li>
+                    <li><strong>SAP-IDOC:</strong> Om logistiek en voorraadbeheer te verwerken.</li>
+                    <li><strong>Backup Systemen:</strong> Voor noodherstel en auditdoeleinden.</li>
+                </ul>
+            </section>
+
+            <section class="mb-5">
+                <h4>3. Gegevensbeveiliging</h4>
+                <p>We geven prioriteit aan de beveiliging van uw informatie. Betalingsgegevens worden asynchroon verwerkt en worden niet permanent opgeslagen in de primaire database van de webapplicatie. We moedigen gebruikers aan om ontwikkelreferenties te gebruiken voor testdoeleinden op localhost.</p>
+            </section>
+
+            <div class="alert alert-info border-0">
+                <strong>Opmerking:</strong> Deze site maakt deel uit van een IT Business Case studie en is ontworpen om moderne ontkoppelde architectuur te demonstreren met behulp van .NET en MassTransit.
+            </div>
+        </div>
+    </div>
+</div>

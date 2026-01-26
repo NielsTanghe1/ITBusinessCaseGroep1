@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Models.Entities.DTO;
 
 /// <summary>
-/// Data Transfer Object representing a simplified version of a OrderItem, 
+/// Data Transfer Object representing a simplified version of a OrderItem,
 /// used for transporting data across application layers.
 /// </summary>
 public class OrderItemDTO : OrderItem {

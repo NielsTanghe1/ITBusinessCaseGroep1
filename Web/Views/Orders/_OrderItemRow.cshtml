@@ -1,0 +1,49 @@
+﻿@model Models.Entities.OrderItem
+@{
+	// Retrieve the index passed from the action
+	var index = ViewData["Index"];
+}
+
+@* If Model is null (initial page load), don't render a row *@
+@if (Model != null) {
+	<!--We pass the current index through ViewData to ensure unique naming -->
+	<input type="hidden" name="Items[@index].OrderId" value="@Model.OrderId" />
+	<input type="hidden" name="Items[@index].CoffeeId" value="@Model.CoffeeId" />
+	<input type="hidden" name="Items[@index].Quantity" value="@Model.Quantity" />
+	<input type="hidden" name="Items[@index].UnitPrice" value="@Model.UnitPrice" />
+
+	<div class="d-flex justify-content-between align-items-start gap-2">
+		<div>
+			<div class="fw-semibold" data-card-title="">
+				<!-- ${escapeHtml(item.type)} ${escapeHtml(item.name)} -->
+			</div>
+			<div class="text-muted small" data-card-unit-price="">
+				@(Model.Quantity) • @(Model.UnitPrice)/unit
+				<!-- ${escapeHtml(item.units)} • €${item.price.toFixed(2)}/unit -->
+			</div>
+		</div>
+
+		<button type="button" class="btn btn-sm btn-outline-danger"
+				  onclick="removeFromCart(event)">
+			Verwijder
+		</button>
+	</div>
+
+	<div class="d-flex justify-content-between align-items-center mt-2">
+		<div class="d-flex align-items-center gap-2">
+			<button type="button" class="btn btn-sm btn-outline-secondary"
+					  onclick="changeUnitQuantity(-1, null, event)">
+				-
+			</button>
+
+			<div class="fw-semibold" data-card-total-quantity="">@Model.Quantity units</div> <!-- ${item.units} unit -->
+
+			<button type="button" class="btn btn-sm btn-outline-secondary"
+					  onclick="changeUnitQuantity(1, null, event)">
+				+
+			</button>
+		</div>
+
+		<div class="fw-bold" data-card-total-price="">@((Model.UnitPrice * Model.Quantity).ToString("C"))</div> <!-- € ${lineTotal.toFixed(2)} -->
+	</div>
+}

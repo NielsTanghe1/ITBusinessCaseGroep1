@@ -16,7 +16,16 @@ namespace Models.Entities;
 /// cref="DeletedAt"/> property can be set to indicate when the entity was deleted, or left
 /// <see langword="null"/> if the entity is active.
 /// </remarks>
-public abstract class BaseIdentityEntity : IdentityUser<long> {
+public abstract class BaseIdentityEntity : IdentityUser<long>, IBaseEntity {
+	/// <remarks>
+	/// Explicitly implemented to support <see langword="init"/> setters while 
+	/// maintaining compatibility with the base IdentityUser property.
+	/// </remarks>
+	long IBaseEntity.Id {
+		get => this.Id;
+		init => this.Id = value;
+	}
+
 	/// <summary>
 	/// Gets or sets the globally unique identifier for the entity.
 	/// </summary>

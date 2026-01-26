@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Models.Entities.DTO;
 
 /// <summary>
-/// Data Transfer Object representing a simplified version of a Address, 
+/// Data Transfer Object representing a simplified version of a Address,
 /// used for transporting data across application layers.
 /// </summary>
 public class AddressDTO : Address {

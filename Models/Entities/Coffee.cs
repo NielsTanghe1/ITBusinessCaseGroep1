@@ -20,7 +20,7 @@ public class Coffee : BaseEntity {
 	/// </summary>
 	[Key]
 	[Display(Name = "CoffeeId")]
-	public long Id {
+	public override long Id {
 		get; init;
 	}
 

@@ -1,0 +1,77 @@
+﻿@model IEnumerable<Models.Entities.Address>
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+	<a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+	<thead>
+		<tr>
+			<th>
+				@Html.DisplayNameFor(model => model.CoffeeUser)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.Type)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.Street)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.HouseNumber)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.City)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.PostalCode)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.CountryISO)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.UnitNumber)
+			</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in Model) {
+			<tr>
+				<td>
+					@Html.DisplayFor(modelItem => item.CoffeeUser.FirstName)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Type)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.Street)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.HouseNumber)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.City)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.PostalCode)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.CountryISO)
+				</td>
+				<td>
+					@Html.DisplayFor(modelItem => item.UnitNumber)
+				</td>
+				<td>
+					<a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+					<a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+					<a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>

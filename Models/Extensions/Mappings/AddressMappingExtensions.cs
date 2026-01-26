@@ -5,9 +5,13 @@ namespace Models.Extensions.Mappings;
 
 /// <summary>
 /// Contains extension methods for transforming <see cref="Address"/>
-/// and <see cref="AddressDTO"/> entities, including creating new
-/// model instances, converting them to DTOs, and updating existing
-/// models based on DTO data.
+/// and <see cref="AddressDTO"/> entities, including:
+/// <list type = "bullet" >
+/// <item><description>Creating new model instances.</description></item>
+/// <item><description>Converting model instances to DTOs.</description></item>
+/// <item><description>Updating existing model instances based on DTO data.</description></item>
+/// <item><description>Creating a shallow, untracked copy of a model instance into a new one.</description></item>
+/// </list>
 /// </summary>
 public static class AddressMappingExtensions {
 	/// <summary>
@@ -90,5 +94,39 @@ public static class AddressMappingExtensions {
 		target.CountryISO = model.CountryISO;
 		target.CreatedAt = model.CreatedAt;
 		target.DeletedAt = model.DeletedAt;
+	}
+
+	/// <summary>
+	/// Creates a shallow, untracked copy of a <see cref="Address"/> into a new <see cref="Address"/> instance.
+	/// </summary>
+	/// <param name="model">
+	/// The source <see cref="Address"/> entity to copy.
+	/// </param>
+	/// <returns>
+	/// A new <see cref="Address"/> instance with identical property values, 
+	/// but detached from any <c>DbContext</c> tracking.
+	/// </returns>
+	/// <remarks>
+	/// This is a shallow copy; reference navigation properties are shared between instances. 
+	/// Useful for transferring data between a local and global database context.
+	/// </remarks>
+	/// <exception cref="ArgumentNullException">
+	/// Thrown when <paramref name="model"/> is <see langword="null"/>.
+	/// </exception>
+	public static Address ShallowCopy(this Address model) {
+		// Throwing here guarantees the return is never null to the caller
+		ArgumentNullException.ThrowIfNull(model);
+
+		return new() {
+			CoffeeUserId = model.CoffeeUserId,
+			Type = model.Type,
+			Street = model.Street,
+			HouseNumber = model.HouseNumber,
+			City = model.City,
+			PostalCode = model.PostalCode,
+			CountryISO = model.CountryISO,
+			CreatedAt = model.CreatedAt,
+			DeletedAt = model.DeletedAt
+		};
 	}
 }

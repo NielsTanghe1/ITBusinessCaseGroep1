@@ -1,0 +1,56 @@
+﻿@model IEnumerable<Order>
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+	<a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+	<thead>
+		<tr>
+			<th>@Html.DisplayNameFor(model => model.CoffeeUser)</th>
+			<th>@Html.DisplayNameFor(model => model.Status)</th>
+			<th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+			<th>@Html.DisplayNameFor(model => model.DeletedAt)</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in Model) {
+            <tr class="@(item.DeletedAt != null ? "table-secondary text-muted" : "")">
+                <td>
+                    @Html.DisplayFor(modelItem => item.CoffeeUser.FirstName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Status)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                </td>
+                <td>
+                    @if (item.DeletedAt != null)
+                    {
+                        <span class="badge bg-danger">Deleted</span>
+                        <small>@Html.DisplayFor(modelItem => item.DeletedAt)</small>
+                    }
+                </td>
+                <td>
+                    @if (item.DeletedAt == null)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <span>|</span>
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> <span>|</span>
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                        }
+                </td>
+            </tr>
+        }
+	</tbody>
+</table>

@@ -21,7 +21,7 @@ public class PaymentDetail : BaseEntity {
 	/// </summary>
 	[Key]
 	[Display(Name = "PaymentDetailsId")]
-	public long Id {
+	public override long Id {
 		get; init;
 	}
 
