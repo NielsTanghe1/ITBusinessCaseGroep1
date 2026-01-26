@@ -17,7 +17,7 @@
 	<div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
 		<div>
 			<h2 class="fw-bold mb-0">Shop</h2>
-			<div class="text-muted small">Kies je bonen, type en aantal KG. Voeg toe aan je winkelmand.</div>
+			<div class="text-muted small">Kies je bonen, selecteer het aantal KG, en voeg toe aan je winkelmand.</div>
 		</div>
 
 		<div class="d-flex gap-2">
@@ -36,7 +36,7 @@
 		</div>
 	</div>
 
-	@if (TempData["OrderPlaced"] is string msg) {
+	@if (TempData["OrderStatus"] is string msg) {
 		<div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
 			@msg
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -54,11 +54,9 @@
 		@Html.AntiForgeryToken()
 
 		<div class="card-body p-4">
-			<!-- Hidden inputs die model binding doen -->
+			<!-- Hidden inputs for model binding -->
 			<input type="hidden" asp-for="CoffeeUserId" />
 			<input type="hidden" asp-for="OrderId" />
-			<!-- Replace the single Items hidden input with a container for dynamic binding -->
-			<div id="itemsContainer"></div>
 
 			<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
 				<h5 class="fw-semibold mb-0">Producten (per unit)</h5>
@@ -75,7 +73,6 @@
 							<div class="d-flex align-items-start justify-content-between item-row">
 								<div class="fw-bold fs-5">@(char.ToUpper(name[0]) + name.Substring(1))</div>
 							</div>
-							@* <span class="badge bg-light text-dark border">per unit</span> *@
 
 							<hr class="my-3" />
 
@@ -86,8 +83,6 @@
 									.Where(coffee => coffee.Name.ToString().ToLower() == name && coffee.Type.ToString().ToLower() == type)
 									.Select((coffee, index) => (coffee, index))) {
 									int quantity;
-
-									@* <input type="hidden" asp-for="Items[index]" /> *@
 
 									<!-- Type blocks -->
 									<div class="vstack gap-2">
@@ -188,9 +183,11 @@
 		 	coffeeTypes.Select(type => type.ToLower()).ToArray()
 		));
 
+		const badge = document.getElementById("cartBadge");
+		const cartTotal = document.getElementById("cartTotal");
+		const cartTotal2 = document.getElementById("cartTotal2");
 		const list  = document.getElementById("cartList");
 		const empty = document.getElementById("cartEmpty");
-		const table = document.getElementById("orderItemsTable");
 		let itemCounter = 0; // Global partial index
 
 		list.innerHTML = "";
@@ -233,13 +230,13 @@
 			const totalQuantity = item.element.querySelector('[data-card-total-quantity]');
 			const totalPrice = item.element.querySelector('[data-card-total-price]');
 
-			const qty = parseInt(item.quantityInput?.value || "0");
-			const lineTotal = qty * item.price;
+			const quantity = parseInt(item.quantityInput?.value || "0");
+			const price = quantity * item.price;
 
 			title.textContent = `${escapeHtml(item.type)} ${escapeHtml(item.name)}`;
-			unitPrice.textContent = `${qty} • €${item.price.toFixed(2)}/unit`;
-			totalQuantity.textContent = `${qty} unit${qty === 1 ? "" : "s"}`;
-			totalPrice.textContent = `€ ${lineTotal.toFixed(2)}`;
+			unitPrice.textContent = `${quantity} • €${item.price.toFixed(2)}/unit`;
+			totalQuantity.textContent = `${quantity} unit${quantity === 1 ? "" : "s"}`;
+			totalPrice.textContent = `€ ${price.toFixed(2)}`;
 		}
 
 		async function addToCart(event) {
@@ -261,11 +258,10 @@
 			if (!item.element) {
 				const index = itemCounter++;
 				const orderItem = {
-						OrderId: @Model.OrderId,
-						CoffeeId: parseInt(item.selector.dataset.coffeeid),
-						Quantity: parseInt(item.quantityInput.value || "0"),
-						UnitPrice: parseFloat(item.price),
-						CreatedAt: Date.now()
+					OrderId: @Model.OrderId,
+					CoffeeId: parseInt(item.selector.dataset.coffeeid),
+					Quantity: parseInt(item.quantityInput.value || "0"),
+					UnitPrice: parseFloat(item.price)
 				};
 
 				const response = await fetch(`/orders/addorderitem/?index=${index}`, {
@@ -303,11 +299,11 @@
 		function removeFromCart(event) {
 			if (!event) return;
 
-			const el = event.target.closest("[id^='card_']");
-			if (!el) return;
+			const element = event.target.closest("[id^='card_']");
+			if (!element) return;
 
-			const key = el.id.replace("card_", "");
-			if (list.contains(el)) list.removeChild(el);
+			const key = element.id.replace("card_", "");
+			if (list.contains(element)) list.removeChild(element);
 
 			const item = cart.get(key);
 			if (!item) return;
@@ -359,76 +355,35 @@
 		}
 
 		function renderCart() {
-			updateBadge();
-			updateTotal();
+			updateTotalS();
 			renderVisibleList();
-
-			// NEW: Populate hidden inputs for model binding
-			populateItemsForSubmit();
 		}
 
-		// Add this new function
-		function populateItemsForSubmit() {
-			const container = document.getElementById('itemsContainer');
-			container.innerHTML = ''; // Clear existing
-
-			let index = 0;
-			cart.forEach((item, key) => {
-				const qty = parseInt(item.quantityInput?.value || "0");
-				if (qty > 0) {
-					const coffeeId = item.selector.dataset.coffeeid;
-
-					// Create properly named inputs for model binding
-					container.innerHTML += `
-						<input type="hidden" name="Items[${index}].CoffeeId" value="${coffeeId}" />
-						<input type="hidden" name="Items[${index}].Quantity" value="${qty}" />
-						<input type="hidden" name="Items[${index}].UnitPrice" value="${item.price}" />
-						<input type="hidden" name="Items[${index}].OrderId" value="${document.querySelector('[name="OrderId"]').value}" />
-					`;
-					index++;
-				}
-			});
-		}
-
-		/* ============================
-		   TOEGEVOEGD (MINIMAAL) - FIX
-		   ============================ */
-
-		function updateTotal() {
-			let total = 0;
+		function updateTotalS() {
+			let totalQuantity = 0;
+			let totalPrice = 0;
 
 			cart.forEach((item) => {
-				const qty = parseInt(item.quantityInput?.value || "0");
-				if (qty > 0) total += qty * parseFloat(item.price);
+				const quantity = parseInt(item.quantityInput?.value || "0");
+				if (quantity > 0) totalQuantity += quantity;
+				if (quantity > 0) totalPrice += quantity * parseFloat(item.price);
 			});
 
-			const value = total.toFixed(2);
-			const el1 = document.getElementById("cartTotal");
-			const el2 = document.getElementById("cartTotal2");
-			if (el1) el1.innerText = value;
-			if (el2) el2.innerText = value;
-		}
+			const value = totalQuantity.toFixed(2);
+			if (cartTotal) cartTotal.innerText = totalQuantity;
+			if (cartTotal2) cartTotal2.innerText = totalQuantity;
 
-		function updateBadge() {
-			const badge = document.getElementById("cartBadge");
 			if (!badge) return;
-
-			let count = 0;
-			cart.forEach((item) => {
-				const qty = parseInt(item.quantityInput?.value || "0");
-				if (qty > 0) count += qty; // totaal aantal units
-			});
-
-			badge.innerText = count.toString();
-			badge.style.display = count > 0 ? "inline-block" : "none";
+			badge.innerText = totalQuantity.toString();
+			badge.style.display = totalQuantity > 0 ? "inline-block" : "none";
 		}
 
 		function renderVisibleList() {
 			// Toon/verberg "leeg" status op basis van items met qty > 0
 			let hasAny = false;
 			cart.forEach((item) => {
-				const qty = parseInt(item.quantityInput?.value || "0");
-				if (qty > 0) hasAny = true;
+				const quantity = parseInt(item.quantityInput?.value || "0");
+				if (quantity > 0) hasAny = true;
 			});
 
 			if (empty) empty.style.display = hasAny ? "none" : "block";
@@ -443,45 +398,6 @@
 				.replaceAll('"', "&quot;")
 				.replaceAll("'", "&#39;");
 		}
-
-		// Basic required fields popup
-		// Not sure if needed
-		// document.getElementById("orderForm").addEventListener("submit", function (e) {
-			//// minstens 1 item in mand (minstens 1 hidden > 0)
-			// let hasAny = false;
-			// for (let i = 0; i < @*@coffees.Count()*@; i++) {
-			// 	const sum =
-			// 		getHiddenUnitQuantity(i, "Roasted") +
-			// 		getHiddenUnitQuantity(i, "Ground") +
-			// 		getHiddenUnitQuantity(i, "Raw");
-			// 	if (sum > 0) { hasAny = true; break; }
-			// }
-
-			//const requiredIds = [
-				// ["FirstName", "Voornaam"],
-				// ["LastName", "Achternaam"],
-				// ["Email", "Email"],
-				// ["Street", "Straat"],
-				// ["Postbus", "Postbus"],
-				// ["City", "Stad"],
-				// ["Postcode", "Postcode"],
-				// ["Country", "Land"],
-			//];
-
-			// const missing = [];
-			// for (const [id, label] of requiredIds) {
-			// 	const val = document.getElementById(id)?.value?.trim();
-			// 	if (!val) missing.push(label);
-			// }
-
-			// if (!hasAny) missing.unshift("Minstens 1 product in winkelmand");
-
-			//// Popup tonen
-			// if (missing.length > 0) {
-			// 	e.preventDefault();
-			// 	  alert("Je bent dit vergeten in te vullen:\n- " + missing.join("\n- "));
-			// }
-		// });
 
 		// init
 		renderCart();

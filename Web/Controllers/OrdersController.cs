@@ -1,12 +1,17 @@
-﻿using MassTransit;
+﻿using Azure;
+using Humanizer;
+using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Models.Data;
 using Models.Entities;
 using Models.Entities.DTO;
 using Models.Entities.Enums;
+using Models.Extensions.Mappings;
 using Web.Models;
 using Web.Services;
 
@@ -80,76 +85,88 @@ public class OrdersController : Controller {
 	// POST: Orders/Create
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Create([Bind("CoffeeUserId,OrderId,Address,Items")] OrderViewModel viewModel) {
-
+	public async Task<IActionResult> Create([Bind("CoffeeUserId,OrderId,Items")] OrderViewModel viewModel) {
 		if (!ModelState.IsValid) {
 			var errors = ModelState.Values.SelectMany(v => v.Errors);
 			foreach (var error in errors) {
 				Console.WriteLine($"Validation Error: {error.ErrorMessage}");
 			}
-			// Re-populate ViewData and return to the view
-			ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName");
-			ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
-			ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
+
+			PopulateViewData();
 			return View(viewModel);
 		}
 
-		if (viewModel.Items == null || !viewModel.Items.Any()) {
-			return BadRequest("Order must have items");
+		if (viewModel.Items == null || viewModel.Items.Count == 0) {
+			ModelState.AddModelError("OrderViewModel", "There must be order items.");
+			PopulateViewData();
+			return View(viewModel);
 		}
 
 		var localUser = await _localContext.Users.FindAsync(viewModel.CoffeeUserId);
-		if (localUser == null) {
-			return BadRequest("User not found");
+		if (localUser == null || localUser.GlobalId == null) {
+			ModelState.AddModelError("LocalUser", "Provided user is not synchronized with the global system.");
+			PopulateViewData();
+			return View(viewModel);
 		}
 
-		var localOrder = new Order {
-			CoffeeUserId = localUser.Id,
-			Status = StatusType.Pending,
-			CreatedAt = DateTime.UtcNow
+		var localOrder = new Order() {
+			CoffeeUserId = (long) localUser.GlobalId
 		};
 
-		_localContext.Orders.Add(localOrder);
-		await _localContext.SaveChangesAsync();
+		var globalOrder = await _utilities.ValidateAddAndBackup(ModelState, localOrder);
+		if (!ModelState.IsValid || globalOrder == null) {
+			PopulateViewData();
+			return View(viewModel);
+		}
 
 		decimal total = 0;
 
-		foreach (var item in viewModel.Items) {
-			var coffee = await _localContext.Coffees.FindAsync(item.CoffeeId);
-			if (coffee == null) {
-				ModelState.AddModelError("", $"Coffee with ID {item.CoffeeId} not found.");
-				continue;
-			}
-
-			var newItem = new OrderItem {
-				OrderId = localOrder.Id,
-				CoffeeId = coffee.GlobalId ?? item.CoffeeId, // Use GlobalId if available, otherwise fallback to local
-				Quantity = item.Quantity,
-				UnitPrice = item.UnitPrice
-			};
-
-			_localContext.OrderItems.Add(newItem);
-
-			await _utilities.SendMessageTo("OrderSubmitted", new OrderSubmitted(
-				localUser.GlobalId ?? localUser.Id,
-				newItem.OrderId,
-				newItem.CoffeeId,
-				coffee.Type,
-				newItem.Quantity,
-				newItem.UnitPrice
-			));
-
-			total += item.Quantity * item.UnitPrice;
-		}
-
-		await _localContext.SaveChangesAsync();
-
-		TempData["OrderPlaced"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
-
 		try {
-			if (await _globalContext.Database.CanConnectAsync()) {
-				await CreateGlobal(localUser, localOrder);
+			foreach (var viewModelItem in viewModel.Items) {
+				var localCoffee = _localContext.Coffees.Find(viewModelItem.CoffeeId);
+				if (localCoffee == null || localCoffee.GlobalId == null) {
+					ModelState.AddModelError("OrderItem",
+						localCoffee == null ? $"Skipped order item, no local coffee instance associated: {viewModelItem.Id}." :
+						localCoffee.GlobalId == null ? $"Skipped order item, no global coffee instance associated with Coffee: {viewModelItem.Id}." :
+						"This error is unknown to us at the time.");
+					continue;
+				}
+
+				var globalCoffee = _globalContext.Coffees.Find(localCoffee.GlobalId);
+				if (globalCoffee == null) {
+					ModelState.AddModelError("OrderItem",
+						globalCoffee == null ? $"Skipped order item, no local coffee instance associated: {viewModelItem.Id}." :
+						globalCoffee.GlobalId == null ? $"Skipped order item, no global coffee instance associated with Coffee: {viewModelItem.Id}." :
+						"This error is unknown to us at the time.");
+					continue;
+				}
+
+				var localOrderItem = new OrderItem {
+					OrderId = globalOrder.Id,
+					CoffeeId = globalCoffee.Id,
+					Quantity = viewModelItem.Quantity,
+					UnitPrice = viewModelItem.UnitPrice
+				};
+
+				var globalOrderItem = await _utilities.ValidateAddAndBackup(ModelState, localOrderItem);
+				if (!ModelState.IsValid) {
+					PopulateViewData();
+					return View(viewModel);
+				}
+
+				await _utilities.SendMessageTo("OrderSubmitted", new OrderSubmitted(
+					(long) localUser.GlobalId,
+					globalOrder.Id,
+					globalCoffee.Id,
+					globalCoffee.Type,
+					viewModelItem.Quantity,
+					viewModelItem.UnitPrice
+				));
+
+				total += viewModelItem.Quantity * viewModelItem.UnitPrice;
 			}
+
+			TempData["OrderStatus"] = $"Order sent to RabbitMQ! Totaal: €{total:0.00}";
 		} catch (Exception ex) {
 			Console.WriteLine($"Global Sync Warning: {ex.Message}");
 		}
@@ -157,51 +174,6 @@ public class OrdersController : Controller {
 		// Redirect to Index so we don't accidentally repost if user refreshes
 		return RedirectToAction(nameof(Index));
 	}
-
-	// TO IMPLEMENT
-	//private async Task<IActionResult> CreateGlobal() {
-	//	var globalUser = _globalContext.Users.Find(localUser.GlobalId);
-
-	//	if (globalUser == null) {
-	//		// Assuming the local user is correctly validated, we back them up in the global context.
-	//		globalUser = new CoffeeUser {
-	//			UserName = localUser.UserName,
-	//			Email = localUser.Email,
-	//			FirstName = localUser.FirstName,
-	//			LastName = localUser.LastName,
-	//			EmailConfirmed = localUser.EmailConfirmed,
-	//			PhoneNumber = localUser.PhoneNumber,
-	//			CreatedAt = localUser.CreatedAt
-	//		};
-	//		globalUser = _globalContext.Users.Add(globalUser).Entity;
-	//		await _globalContext.SaveChangesAsync();
-
-	//		localUser.GlobalId = globalUser.Id;
-	//		await _localContext.SaveChangesAsync();
-	//	}
-
-	//	var globalOrder = _globalContext.Orders.Add(new() {
-	//		CoffeeUserId = globalUser.Id
-	//	}).Entity;
-	//	await _globalContext.SaveChangesAsync();
-
-	//	// Run a foreach as the Order Id has to be generated by the database first
-	//	foreach (var newItem in _localContext.OrderItems.Where(oi => oi.OrderId == localOrder.Id).ToArray()) {
-	//		var globalCoffeeId = _globalContext.Coffees.Find(newItem.Coffee?.GlobalId)?.Id;
-
-	//		if (globalCoffeeId == null) {
-	//			continue;
-	//		}
-
-	//		_globalContext.OrderItems.Add(new() {
-	//			OrderId = globalOrder.Id,
-	//			CoffeeId = (long) globalCoffeeId,
-	//			Quantity = newItem.Quantity,
-	//			UnitPrice = newItem.UnitPrice
-	//		});
-	//	}
-	//	await _localContext.SaveChangesAsync();
-	//}
 
 	// GET: Orders/Edit/5
 	public async Task<IActionResult> Edit(long? id) {
@@ -306,94 +278,28 @@ public class OrdersController : Controller {
 		return RedirectToAction(nameof(Index));
 	}
 
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public IActionResult AddOrderItem([FromBody] OrderItem posted, int index) {
+		if (!ModelState.IsValid) {
+			return BadRequest(ModelState);
+		}
+
+		if (posted == null) {
+			return BadRequest();
+		}
+
+		ViewData["Index"] = index;
+		return PartialView("_OrderItemRow", posted);
+	}
+
 	private bool OrderExists(long id) {
 		return _localContext.Orders.Any(e => e.Id == id);
 	}
 
-	private async Task CreateGlobal(CoffeeUser localUser, Order localOrder) {
-		// 1. ENSURE USER EXISTS GLOBALLY
-		// We check if the user already has a GlobalId.
-		CoffeeUser? globalUser = null;
-
-		if (localUser.GlobalId != null) {
-			globalUser = await _globalContext.Users.FindAsync(localUser.GlobalId);
-		}
-
-		// If user doesn't exist globally (or didn't have a GlobalId), create them
-		if (globalUser == null) {
-			globalUser = new CoffeeUser {
-				// Copy relevant fields from localUser
-				UserName = localUser.UserName,
-				Email = localUser.Email,
-				FirstName = localUser.FirstName,
-				LastName = localUser.LastName,
-				EmailConfirmed = localUser.EmailConfirmed,
-				PhoneNumber = localUser.PhoneNumber,
-				CreatedAt = localUser.CreatedAt,
-				// SecurityStamp is important for some Identity checks, copy it if needed or let it regenerate
-				SecurityStamp = localUser.SecurityStamp,
-				NormalizedEmail = localUser.NormalizedEmail,
-				NormalizedUserName = localUser.NormalizedUserName
-			};
-
-			_globalContext.Users.Add(globalUser);
-			await _globalContext.SaveChangesAsync(); // Save to generate the Global ID
-
-			// Link the local user to the new global user
-			localUser.GlobalId = globalUser.Id;
-			_localContext.Users.Update(localUser);
-			await _localContext.SaveChangesAsync();
-		}
-
-		// 2. CREATE GLOBAL ORDER
-		var globalOrder = new Order {
-			CoffeeUserId = globalUser.Id, // Use the Global User ID
-			Status = localOrder.Status,
-			CreatedAt = localOrder.CreatedAt
-			// Add other properties if your Order entity has them (e.g., Address)
-		};
-
-		_globalContext.Orders.Add(globalOrder);
-		await _globalContext.SaveChangesAsync(); // Save to generate the Global Order ID
-
-		// Update the local order with the new GlobalId
-		localOrder.GlobalId = globalOrder.Id;
-		_localContext.Orders.Update(localOrder);
-		await _localContext.SaveChangesAsync();
-
-		// 3. SYNC ORDER ITEMS
-		// Fetch the items we just saved locally
-		var localItems = await _localContext.OrderItems
-			 .Where(oi => oi.OrderId == localOrder.Id)
-			 .Include(oi => oi.Coffee) // Include Coffee to get its GlobalId
-			 .ToListAsync();
-
-
-		var itemPairs = new List<(OrderItem Local, OrderItem Global)>();
-
-		foreach (var localItem in localItems) {
-			if (localItem.Coffee != null && localItem.Coffee.GlobalId != null) {
-				var globalItem = new OrderItem {
-					OrderId = globalOrder.Id,
-					CoffeeId = (long) localItem.Coffee.GlobalId,
-					Quantity = localItem.Quantity,
-					UnitPrice = localItem.UnitPrice
-				};
-
-				_globalContext.OrderItems.Add(globalItem);
-
-				// Store the pair so we can update the local ID later
-				itemPairs.Add((localItem, globalItem));
-			}
-		}
-
-		await _globalContext.SaveChangesAsync();
-
-		foreach (var pair in itemPairs) {
-			pair.Local.GlobalId = pair.Global.Id;
-			// _localContext.Update(pair.Local); // Not strictly necessary if the entity is already tracked, but safe to include
-		}
-
-		await _localContext.SaveChangesAsync();
+	private void PopulateViewData() {
+		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName");
+		ViewData["CoffeeTypes"] = _utilities.GetEnumSelectList<CoffeeType>(ignored: ["Unknown"]);
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 	}
 }

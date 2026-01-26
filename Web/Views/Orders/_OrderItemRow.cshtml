@@ -1,15 +1,16 @@
 ﻿@model Models.Entities.OrderItem
+@{
+	// Retrieve the index passed from the action
+	var index = ViewData["Index"];
+}
 
 @* If Model is null (initial page load), don't render a row *@
 @if (Model != null) {
 	<!--We pass the current index through ViewData to ensure unique naming -->
-	int index = ViewBag.Index ?? 0;
-	<input type="hidden" name="Items[@index].CoffeeId" value="@Model.CoffeeId" />
 	<input type="hidden" name="Items[@index].OrderId" value="@Model.OrderId" />
+	<input type="hidden" name="Items[@index].CoffeeId" value="@Model.CoffeeId" />
 	<input type="hidden" name="Items[@index].Quantity" value="@Model.Quantity" />
 	<input type="hidden" name="Items[@index].UnitPrice" value="@Model.UnitPrice" />
-	<input type="hidden" name="Items[@index].CreatedAt" value="@Model.CreatedAt" />
-	<input type="hidden" name="Items[@index].DeletedAt" value="@Model.DeletedAt" />
 
 	<div class="d-flex justify-content-between align-items-start gap-2">
 		<div>

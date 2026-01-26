@@ -118,15 +118,15 @@ var app = builder.Build();
 // Populate the local database with data
 using (var scope = app.Services.CreateScope()) {
 	var services = scope.ServiceProvider;
-	var localContext = services.GetRequiredService<LocalDbContext>();
 	var globalContext = services.GetRequiredService<GlobalDbContext>();
+	var localContext = services.GetRequiredService<LocalDbContext>();
 
 	try {
-		if (!localContext.Coffees.Any()) {
-			await LocalDbContext.Seeder(services);
-		}
 		if (!globalContext.Coffees.Any()) {
 			await GlobalDbContext.Seeder(services);
+		}
+		if (!localContext.Coffees.Any()) {
+			await LocalDbContext.Seeder(services);
 		}
 	} catch (Exception ex) {
 		var logger = services.GetRequiredService<ILogger<Program>>();

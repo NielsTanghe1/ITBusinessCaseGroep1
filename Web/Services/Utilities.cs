@@ -1,6 +1,12 @@
 ﻿using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Models.Data;
 using Models.Entities;
+using Models.Extensions.Mappings;
 
 namespace Web.Services;
 
@@ -18,6 +24,8 @@ namespace Web.Services;
 /// constructor injection where needed.
 /// </remarks>
 public class Utilities {
+	private readonly LocalDbContext _localContext;
+	private readonly GlobalDbContext _globalContext;
 	private readonly ISendEndpointProvider _sendEndpointProvider;
 	private readonly IConfiguration _configuration;
 
@@ -34,8 +42,12 @@ public class Utilities {
 	/// utility behavior, such as queue names or enum display options.
 	/// </param>
 	public Utilities(
+		LocalDbContext localContext,
+		GlobalDbContext globalContext,
 		ISendEndpointProvider sendEndpointProvider,
 		IConfiguration configuration) {
+		_localContext = localContext;
+		_globalContext = globalContext;
 		_sendEndpointProvider = sendEndpointProvider;
 		_configuration = configuration;
 	}
@@ -159,5 +171,185 @@ public class Utilities {
 	/// </returns>
 	public static decimal GetTotalPrice(OrderItem orderItem) {
 		return (orderItem.Quantity * orderItem.UnitPrice);
+	}
+
+	/// <summary>
+	/// Backs up any entity implementing <see cref="IBaseEntity"/> from the local context to the global context.
+	/// </summary>
+	/// <typeparam name="T">
+	/// The entity type which must implement <see cref="IBaseEntity"/>.
+	/// </typeparam>
+	/// <param name="localEntity">
+	/// The local entity instance to back up.
+	/// </param>
+	/// <remarks>
+	/// This method assumes no global copy exists yet. It performs a cross-context operation; 
+	/// failure at the local update stage may result in orphaned global records.
+	/// </remarks>
+	/// <returns>
+	/// A <see cref="Action{T1, T2}"/> with:<br/>
+	///  - T1: A status code: 200 (Success), 400 (Error), or 503 (Database Unavailable).<br/>
+	///  - T2: The global instance that was created/saved.
+	/// </returns>
+	private async Task<(int, T?)> BackupToGlobal<T>(T localEntity) where T : class, IBaseEntity {
+		/* 
+		 * PROCESS:
+		 * 1. Ensure connectivity at the start
+		 * 2. Get the global entity if a GlobalId is present.
+		 * 
+		 * No entity found?
+		 * 1. Create a new global entity by shallow copying the local entity.
+		 * 2. Save changes in the global context and obtain a new GlobalId.
+		 * 3. Update the local entity GlobalID and save changes.
+		 * 
+		 * Entity found?
+		 * 1. Update the global entity by shallow copying the local entity.
+		 * 2. Save changes in the global context.
+		 * 
+		 * ISSUES:
+		 * . Connectivity check happens only once at the start so failure between steps may result in orphaned global entities.
+		 */
+		try {
+			// Connectivity Check
+			if (!_globalContext.Database.CanConnect() || !_localContext.Database.CanConnect()) {
+				return (StatusCodes.Status503ServiceUnavailable, null);
+			}
+
+			T? globalEntity = null;
+
+			// Get from global context
+			if (localEntity.GlobalId != null) {
+				globalEntity = await _globalContext.FindAsync<T>(localEntity.GlobalId);
+			}
+
+			// Create new global instance, update local
+			if (globalEntity == null) {
+				globalEntity = localEntity.ShallowCopy<T>();
+				_globalContext.Set<T>().Add(globalEntity);
+				await _globalContext.SaveChangesAsync();
+
+				localEntity.GlobalId = globalEntity.Id;
+				_localContext.Set<T>().Update(localEntity);
+				await _localContext.SaveChangesAsync();
+				return (StatusCodes.Status200OK, globalEntity);
+			}
+
+			// Update the global instance
+			globalEntity = localEntity.ShallowCopy<T>();
+			_globalContext.Set<T>().Update(globalEntity);
+			await _localContext.SaveChangesAsync();
+			return (StatusCodes.Status200OK, globalEntity);
+		} catch (Exception) {
+			// Could do some logging here...
+			return (StatusCodes.Status400BadRequest, null);
+		}
+	}
+
+	/// <summary>
+	/// Persists a new entity to the local database and automatically synchronizes it with the global backup server.
+	/// </summary>
+	/// <typeparam name="T">
+	/// The entity type to persist. Must implement <see cref="IBaseEntity"/>.
+	/// </typeparam>
+	/// <param name="localEntity">
+	/// The new entity to add to the local database. Must not exist in the database yet.
+	/// </param>
+	/// <returns>
+	/// A <see cref="ActionResult{TEntity?}"/> containing the persisted entity on success,
+	/// or an appropriate HTTP error result (e.g. <c>BadRequest</c>, <c>Conflict</c>) on failure.
+	/// </returns>
+	/// <exception cref="InvalidOperationException">
+	/// Thrown when the entity type <typeparamref name="T"/> is not configured for backup operations,
+	/// or when the backup synchronization fails after local persistence.
+	/// </exception>
+	/// <remarks>
+	/// <para>
+	/// This method performs a two-phase operation:
+	/// <list type="number">
+	/// <item>Adds the entity to the local database context and calls <c>SaveChangesAsync()</c>.</item>
+	/// <item>Immediately synchronizes the newly created entity with the global backup server.</item>
+	/// </list>
+	/// </para>
+	/// <para>
+	/// On success, returns <c>Ok(entity)</c>. On local persistence failure, returns the appropriate MVC error.
+	/// Backup failures after local success will throw <see cref="InvalidOperationException"/>.
+	/// </para>
+	/// </remarks>
+	private async Task<ActionResult<T?>> AddAndBackup<T>(T localEntity) where T : class, IBaseEntity {
+		/* 
+		* PROCESS:
+		* 1. Create and save localy
+		* 2. Create global backup
+		* 3. Return most eggregious error, if any, assuming BackupToGlobal returns (int StatusCode, T? globalEntity)
+		* 
+		* ISSUES:
+		* 1. Should probably return all errors.
+		*/
+		_localContext.Set<T>().Add(localEntity);
+		await _localContext.SaveChangesAsync();
+
+		var syncResult = await BackupToGlobal(localEntity);
+		return syncResult switch {
+			(503, _) => new ObjectResult(new { message = "Connectivity failed: Unable to reach the local or backup database server." }) { StatusCode = StatusCodes.Status503ServiceUnavailable },
+			(400, _) => new ObjectResult(new { message = $"Synchronization rejected: The backup server refused the {typeof(T).Name} entity." }) { StatusCode = StatusCodes.Status400BadRequest },
+			(200, T globalEntity) when localEntity.GlobalId != null => new OkObjectResult(globalEntity) { StatusCode = StatusCodes.Status200OK },
+			(200, null) => new ObjectResult(new { message = $"Sync partial success: {typeof(T).Name} GlobalId assigned, but global confirmation object was missing." }) { StatusCode = StatusCodes.Status409Conflict },
+			(var code, _) when localEntity.GlobalId == null => new ObjectResult(new { message = $"Sync incomplete: local entity saved, but no global reference was established (Status: {code})." }) { StatusCode = StatusCodes.Status422UnprocessableEntity },
+			_ => throw new InvalidOperationException($"Unexpected synchronization state. Status: {syncResult}, Entity: {typeof(T).Name}")
+		};
+	}
+
+	/// <summary>
+	/// Validates an entity, adds it to the local database, and synchronizes with the global backup server.
+	/// Designed for use in controller actions with ModelState validation.
+	/// </summary>
+	/// <typeparam name="T">
+	/// The entity type to validate and persist. Must implement <see cref="IBaseEntity"/>.
+	/// </typeparam>
+	/// <param name="targetModelState">
+	/// The <see cref="ModelStateDictionary"/> to populate with validation errors.
+	/// Typically passed from a controller's <c>ModelState</c> property.
+	/// </param>
+	/// <param name="localEntity">
+	/// The entity to validate and persist.
+	/// </param>
+	/// <returns>
+	/// The successfully persisted and backed-up entity on success, or <see langword="null"/> if validation/persistence fails.
+	/// </returns>
+	/// <exception cref="InvalidOperationException">
+	/// Thrown when backup synchronization fails after successful local persistence.
+	/// </exception>
+	/// <remarks>
+	/// <para>
+	/// This method orchestrates the complete "validate → add → backup" workflow for controller actions:
+	/// <list type="number">
+	/// <item>Validates the entity and populates <paramref name="targetModelState"/> with errors.</item>
+	/// <item>If valid, calls <see cref="AddAndBackup{T}(T)"/> to persist and backup.</item>
+	/// <item>Returns the entity or <see langword="null"/> based on success/failure.</item>
+	/// </list>
+	/// </para>
+	/// </remarks>
+	public async Task<T?> ValidateAddAndBackup<T>(ModelStateDictionary targetModelState, T localEntity) where T : class, IBaseEntity {
+		var response = await AddAndBackup(localEntity);
+		T? globalEntity = response.Value;
+
+		if (globalEntity == null && response.Result is OkObjectResult ok) {
+			globalEntity = ok.Value as T;
+		}
+
+		if (globalEntity == null) {
+			int statusCode = 0;
+			string errorMsg = "Unknown synchronization error.";
+
+			if (response.Result is ObjectResult obj) {
+				statusCode = obj.StatusCode ?? 0;
+				errorMsg = obj.Value?.ToString() ?? errorMsg;
+			} else if (response.Result is IStatusCodeActionResult statusResult) {
+				statusCode = statusResult.StatusCode ?? 0;
+			}
+
+			targetModelState.AddModelError("", $"Creation and backup failed (Status {statusCode}): {errorMsg}");
+		}
+		return globalEntity;
 	}
 }
