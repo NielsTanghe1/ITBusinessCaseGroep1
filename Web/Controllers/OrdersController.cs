@@ -1,5 +1,4 @@
 ﻿using MassTransit;
-using MassTransit.Transports;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -38,7 +37,10 @@ public class OrdersController : Controller {
 
 	// GET: Orders
 	public async Task<IActionResult> Index() {
-		var orders = await _localContext.Orders.Include(o => o.CoffeeUser).Where(o => o.DeletedAt == null).ToListAsync();
+		var orders = await _localContext.Orders
+			 .Include(o => o.CoffeeUser)
+			 .OrderByDescending(o => o.CreatedAt)
+			 .ToListAsync();
 		return View(orders);
 	}
 
@@ -108,7 +110,7 @@ public class OrdersController : Controller {
 		};
 
 		_localContext.Orders.Add(localOrder);
-		await _localContext.SaveChangesAsync(); 
+		await _localContext.SaveChangesAsync();
 
 		decimal total = 0;
 
@@ -223,18 +225,38 @@ public class OrdersController : Controller {
 			return NotFound();
 
 		if (ModelState.IsValid) {
-			try {
-				_localContext.Update(order);
-				await _localContext.SaveChangesAsync();
-			} catch (DbUpdateConcurrencyException) {
-				if (!OrderExists(order.Id))
-					return NotFound();
-				else
-					throw;
+			var localOrder = await _localContext.Orders.FindAsync(id);
+
+			if (localOrder == null) {
+				return NotFound();
 			}
+
+			localOrder.Status = order.Status;
+			localOrder.CoffeeUserId = order.CoffeeUserId;
+
+			_localContext.Orders.Update(localOrder);
+			await _localContext.SaveChangesAsync();
+
+			if (localOrder.GlobalId != null) {
+				try {
+					if (await _globalContext.Database.CanConnectAsync()) {
+						var globalOrder = await _globalContext.Orders.FindAsync(localOrder.GlobalId);
+
+						if (globalOrder != null) {
+							globalOrder.Status = localOrder.Status;
+							_globalContext.Orders.Update(globalOrder);
+							await _globalContext.SaveChangesAsync();
+						}
+					}
+				} catch (Exception ex) {
+					Console.WriteLine($"Global Edit Sync Warning: {ex.Message}");
+				}
+			}
+
 			return RedirectToAction(nameof(Index));
 		}
 		ViewData["CoffeeUserId"] = new SelectList(_localContext.Users, "Id", "FirstName", order.CoffeeUserId);
+		ViewData["StatusTypes"] = _utilities.GetEnumSelectList<StatusType>(ignored: ["Unknown"]);
 		return View(order);
 	}
 
@@ -264,6 +286,22 @@ public class OrdersController : Controller {
 			_localContext.Orders.Update(order);
 		}
 
+		// 2. Sync soft delete to Global
+		if (order.GlobalId != null) {
+			try {
+				if (await _globalContext.Database.CanConnectAsync()) {
+					var globalOrder = await _globalContext.Orders.FindAsync(order.GlobalId);
+
+					if (globalOrder != null) {
+						globalOrder.DeletedAt = order.DeletedAt;
+						_globalContext.Orders.Update(globalOrder);
+						await _globalContext.SaveChangesAsync();
+					}
+				}
+			} catch (Exception ex) {
+				Console.WriteLine($"Global Delete Sync Warning: {ex.Message}");
+			}
+		}
 		await _localContext.SaveChangesAsync();
 		return RedirectToAction(nameof(Index));
 	}
@@ -330,18 +368,32 @@ public class OrdersController : Controller {
 			 .Include(oi => oi.Coffee) // Include Coffee to get its GlobalId
 			 .ToListAsync();
 
+
+		var itemPairs = new List<(OrderItem Local, OrderItem Global)>();
+
 		foreach (var localItem in localItems) {
-			// We need the Global ID of the Coffee product
 			if (localItem.Coffee != null && localItem.Coffee.GlobalId != null) {
-				_globalContext.OrderItems.Add(new OrderItem {
-					OrderId = globalOrder.Id, // Link to the new Global Order
-					CoffeeId = (long) localItem.Coffee.GlobalId, // Use the Global Coffee ID
+				var globalItem = new OrderItem {
+					OrderId = globalOrder.Id,
+					CoffeeId = (long) localItem.Coffee.GlobalId,
 					Quantity = localItem.Quantity,
 					UnitPrice = localItem.UnitPrice
-				});
+				};
+
+				_globalContext.OrderItems.Add(globalItem);
+
+				// Store the pair so we can update the local ID later
+				itemPairs.Add((localItem, globalItem));
 			}
 		}
 
 		await _globalContext.SaveChangesAsync();
+
+		foreach (var pair in itemPairs) {
+			pair.Local.GlobalId = pair.Global.Id;
+			// _localContext.Update(pair.Local); // Not strictly necessary if the entity is already tracked, but safe to include
+		}
+
+		await _localContext.SaveChangesAsync();
 	}
 }
