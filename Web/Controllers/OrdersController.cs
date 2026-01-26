@@ -113,28 +113,30 @@ public class OrdersController : Controller {
 		decimal total = 0;
 
 		foreach (var item in viewModel.Items) {
-			var newItem = new OrderItem {
-				OrderId = localOrder.Id,
-				CoffeeId = item.CoffeeId,
-				Quantity = item.Quantity,
-				UnitPrice = item.UnitPrice
-			};
-
-			_localContext.OrderItems.Add(newItem);
 			var coffee = await _localContext.Coffees.FindAsync(item.CoffeeId);
 			if (coffee == null) {
 				ModelState.AddModelError("", $"Coffee with ID {item.CoffeeId} not found.");
 				continue;
 			}
 
+			var newItem = new OrderItem {
+				OrderId = localOrder.Id,
+				CoffeeId = coffee.GlobalId ?? item.CoffeeId, // Use GlobalId if available, otherwise fallback to local
+				Quantity = item.Quantity,
+				UnitPrice = item.UnitPrice
+			};
+
+			_localContext.OrderItems.Add(newItem);
+
 			await _utilities.SendMessageTo("OrderSubmitted", new OrderSubmitted(
 				viewModel.CoffeeUserId,
-				item.Id,
-				item.CoffeeId,
+				newItem.OrderId,
+				newItem.CoffeeId,
 				coffee.Type,
-				item.Quantity,
-				item.UnitPrice
+				newItem.Quantity,
+				newItem.UnitPrice
 			));
+
 			total += item.Quantity * item.UnitPrice;
 		}
 
