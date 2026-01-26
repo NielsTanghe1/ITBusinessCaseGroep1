@@ -1,14 +1,14 @@
 ﻿@{
-	ViewData["Title"] = "Welcome to IT Business Coffee";
+	ViewData["Title"] = "b2b Koffie";
 }
 
 <!-- Hero / Top section -->
 <div class="container py-5 rounded-2 hero-banner">
 	<div class="row align-items-center g-4">
 		<div class="col-lg-6">
-			<h1 class="display-5 fw-bold">Welkom bij IT Business Coffee</h1>
+            <h1 class="display-5 fw-bold">Welkom bij onze b2b koffie-webshop</h1>
 			<p class="lead text-muted fw-semibold">
-				Speciale koffie voor ontwikkelteams, naadloos geïntegreerd met een bestel pijplijn via MassTransit en RabbitMQ.
+				Koffie voor proffesionals.
 			</p>
 
 			<div class="d-flex flex-wrap gap-2 mt-4">
@@ -16,25 +16,23 @@
 					Nieuwe bestelling
 				</a>
 
-				<a class="btn btn-outline-secondary btn-lg px-4" asp-controller="Home" asp-action="Dashboard">
-					RabbitMQ dashboard
-				</a>
-			</div>
-
-			<div class="mt-4 small text-muted">
-				Tip: Pauzeer consumenten om berichten langer te kunnen inspecteren in RabbitMQ.
+				@if (User.IsInRole("Admin"))
+				{
+					<a class="btn btn-outline-secondary btn-lg px-4" asp-controller="Home" asp-action="Dashboard">
+						RabbitMQ dashboard
+					</a>
+				}
 			</div>
 		</div>
 
 		<div class="col-lg-6">
 			<div class="card shadow-sm border-0 rounded-4">
 				<div class="card-body p-4">
-					<p class="mb-2 text-uppercase small text-muted">Voor ingenieurs & operationeel personeel.</p>
 					<h5 class="fw-semibold mb-3">Hoe werkt het?</h5>
 
 					<ol class="mb-0 text-muted">
-						<li>Je vult het formulier in</li>
-						<li>Controller publish’t <code>OrderSubmitted</code></li>
+						<li>Je plaatst een bestelling</li>
+						<li>Controller publisht <code>OrderSubmitted</code></li>
 						<li>MassTransit stuurt naar RabbitMQ</li>
 						<li>Consumer verwerkt de bestelling</li>
 					</ol>
