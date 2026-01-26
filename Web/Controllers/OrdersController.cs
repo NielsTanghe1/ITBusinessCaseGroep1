@@ -129,7 +129,7 @@ public class OrdersController : Controller {
 			_localContext.OrderItems.Add(newItem);
 
 			await _utilities.SendMessageTo("OrderSubmitted", new OrderSubmitted(
-				viewModel.CoffeeUserId,
+				localUser.GlobalId ?? localUser.Id,
 				newItem.OrderId,
 				newItem.CoffeeId,
 				coffee.Type,
