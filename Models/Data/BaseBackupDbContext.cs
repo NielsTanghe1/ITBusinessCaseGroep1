@@ -125,4 +125,41 @@ public abstract class BaseBackupDbContext : DbContext {
 			entity.Ignore("GlobalId");
 		});
 	}
+
+	public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
+		// 1. Define Belgian Time Zone
+		string timeZoneId = "Romance Standard Time";
+		TimeZoneInfo belgianTimeZone;
+
+		try {
+			belgianTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+		} catch (TimeZoneNotFoundException) {
+			belgianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Brussels");
+		}
+
+		// 2. Get current Belgian Time
+		var belgianNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, belgianTimeZone);
+
+		// 3. Find all Added/Modified entities that inherit from BaseEntity
+		var entries = ChangeTracker.Entries()
+				  .Where(e => e.Entity is BaseEntity &&
+								  (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+		foreach (var entry in entries) {
+			var entity = (BaseEntity) entry.Entity;
+
+			if (entry.State == EntityState.Added) {
+				entity.CreatedAt = belgianNow;
+			}
+
+			if (entry.State == EntityState.Modified) {
+				var deletedAtProp = entry.Property("DeletedAt");
+				if (deletedAtProp.IsModified && entity.DeletedAt != null) {
+					entity.DeletedAt = belgianNow;
+				}
+			}
+		}
+
+		return base.SaveChangesAsync(cancellationToken);
+	}
 }

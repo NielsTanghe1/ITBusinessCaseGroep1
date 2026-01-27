@@ -55,7 +55,8 @@ public abstract class BaseIdentityDbContext : IdentityDbContext<CoffeeUser, Iden
 	/// Initializes a new instance of the <see cref="BaseIdentityDbContext"/> class
 	/// with default options.
 	/// </summary>
-	protected BaseIdentityDbContext() { }
+	protected BaseIdentityDbContext() {
+	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="BaseIdentityDbContext"/> class
@@ -105,5 +106,46 @@ public abstract class BaseIdentityDbContext : IdentityDbContext<CoffeeUser, Iden
 			entity.Property(e => e.Name).HasConversion<string>();
 			entity.Property(e => e.Type).HasConversion<string>();
 		});
+	}
+
+	public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
+		// 1. Define Belgian Time Zone
+		// Use "Romance Standard Time" for Windows or "Europe/Brussels" for Linux/Docker
+		string timeZoneId = "Romance Standard Time";
+		TimeZoneInfo belgianTimeZone;
+
+		try {
+			belgianTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+		} catch (TimeZoneNotFoundException) {
+			// Fallback for Linux environments if hosting on Docker/Azure Linux
+			belgianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Brussels");
+		}
+
+		// 2. Get current Belgian Time
+		var belgianNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, belgianTimeZone);
+
+		// 3. Find all Added/Modified entities that inherit from BaseEntity
+		var entries = ChangeTracker.Entries()
+		.Where(e => e.Entity is BaseEntity &&
+		(e.State == EntityState.Added || e.State == EntityState.Modified));
+
+		foreach (var entry in entries) {
+			var entity = (BaseEntity) entry.Entity;
+
+			if (entry.State == EntityState.Added) {
+				// FORCE CreatedAt to Belgian Time on creation
+				entity.CreatedAt = belgianNow;
+			}
+
+			if (entry.State == EntityState.Modified) {
+				// Handle Soft Delete
+				// If DeletedAt is being set (is not null) and was just modified
+				var deletedAtProp = entry.Property("DeletedAt");
+				if (deletedAtProp.IsModified && entity.DeletedAt != null) {
+					entity.DeletedAt = belgianNow;
+				}
+			}
+		}
+		return base.SaveChangesAsync(cancellationToken);
 	}
 }
